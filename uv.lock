@@ -773,8 +773,8 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "httpx2", specifier = ">=2.9.1" },
-    { name = "vgi-python", extras = ["http"], specifier = ">=0.33.0" },
-    { name = "vgi-python", extras = ["http", "oauth"], marker = "extra == 'serve'", specifier = ">=0.33.0" },
+    { name = "vgi-python", extras = ["http"], specifier = ">=0.34.1" },
+    { name = "vgi-python", extras = ["http", "oauth"], marker = "extra == 'serve'", specifier = ">=0.34.1" },
     { name = "vgi-rpc", extras = ["sentry"], marker = "extra == 'serve'", specifier = ">=0.46.0" },
 ]
 provides-extras = ["serve"]
@@ -790,7 +790,7 @@ dev = [
 
 [[package]]
 name = "vgi-python"
-version = "0.33.0"
+version = "0.34.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -800,9 +800,9 @@ dependencies = [
     { name = "typer" },
     { name = "vgi-rpc" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/7d/f1/5b7798ead96746df521207f2681636d4d627c75574830651bb4ce40889f4/vgi_python-0.33.0.tar.gz", hash = "sha256:986fa215895fb2f0c41242a4519ab455d73ce8856012a6d080f4520ee3acbc34", size = 4337454, upload-time = "2026-09-17T16:37:02.732Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e6/eb/7a686d541f656348687ec54408f50119b112279f392a8645b20f3f1ea1d9/vgi_python-0.34.1.tar.gz", hash = "sha256:9d344432d166dc64661ed4a3d36f98b8c5ac263c33a4e542ad699da37ee6a88d", size = 4342552, upload-time = "2026-09-18T04:27:08.79Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e4/c3/f87fffb3997c003fe9bfc53128bca52593859d0c36c4d84f3d883c9ca6cd/vgi_python-0.33.0-py3-none-any.whl", hash = "sha256:e643518ff2503f04b6cf94052b8d023e3304ec147a9e5f95bae9a3da647ad72c", size = 1184157, upload-time = "2026-09-17T16:37:00.78Z" },
+    { url = "https://files.pythonhosted.org/packages/f5/3c/dd5190324cfc2471681edc919f567a195a480ec4fdcdeec07aa9f72085ec/vgi_python-0.34.1-py3-none-any.whl", hash = "sha256:fb66f9f36bbade7bbe38b021db989597e38d8ddf29594e653a5d00cf672b3759", size = 1185859, upload-time = "2026-09-18T04:27:06.512Z" },
 ]
 
 [package.optional-dependencies]

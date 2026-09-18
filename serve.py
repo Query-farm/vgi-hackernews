@@ -1,7 +1,7 @@
 # /// script
 # requires-python = ">=3.13"
 # dependencies = [
-#     "vgi-python[http]>=0.33.0",
+#     "vgi-python[http]>=0.34.1",
 #     "vgi-rpc>=0.46.0",
 #     "httpx2>=2.9.1",
 # ]

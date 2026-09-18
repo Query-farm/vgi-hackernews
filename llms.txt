@@ -11,7 +11,7 @@ ATTACH 'hackernews' (TYPE vgi,
   LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-hackernews vgi-hackernews');
 ```
 
-Append a release tag to pin a version (`git+https://github.com/Query-farm/vgi-hackernews@v0.1.0`). From inside a clone of the repository, `LOCATION 'uv run hackernews_worker.py'` works too. Objects live in schema `main`, which is the default, so `hackernews.top_stories` and `hackernews.main.top_stories` are the same table. Discover the surface in SQL with `SELECT table_name, comment FROM duckdb_tables() WHERE database_name = 'hackernews'` and `SELECT function_name, description FROM duckdb_functions() WHERE database_name = 'hackernews'`.
+Append a release tag to pin a version (`git+https://github.com/Query-farm/vgi-hackernews@v0.1.1`). With only Docker installed, `LOCATION 'docker run -i --rm ghcr.io/query-farm/vgi-hackernews stdio'` runs the published image instead. From inside a clone of the repository, `LOCATION 'uv run hackernews_worker.py'` works too. Objects live in schema `main`, which is the default, so `hackernews.top_stories` and `hackernews.main.top_stories` are the same table. Discover the surface in SQL with `SELECT table_name, comment FROM duckdb_tables() WHERE database_name = 'hackernews'` and `SELECT function_name, description FROM duckdb_functions() WHERE database_name = 'hackernews'`.
 
 **Tables** (no arguments, no parentheses):
 

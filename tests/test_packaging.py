@@ -71,3 +71,45 @@ class TestLicense:
         notice = (ROOT / "NOTICE").read_text()
         assert "news.ycombinator.com" in notice
         assert "MIT License" in notice
+
+
+class TestContainerImage:
+    """The image's entrypoint and release gate name things that must exist.
+
+    Neither is exercised by the Python suite otherwise: a renamed worker class
+    or console script would only surface when the published image failed its
+    /health smoke, or worse, when someone ran it.
+    """
+
+    def _entrypoint(self) -> str:
+        return (ROOT / "docker-entrypoint.sh").read_text()
+
+    def test_http_transport_serves_the_real_worker_class(self) -> None:
+        import importlib
+
+        match = re.search(r"vgi-serve (\S+):(\S+) --http", self._entrypoint())
+        assert match is not None
+        module, attr = match.groups()
+        assert hasattr(importlib.import_module(module), attr)
+
+    def test_stdio_transport_execs_a_declared_console_script(self, project: dict) -> None:
+        match = re.search(r"stdio\).*exec (\S+)", self._entrypoint())
+        assert match is not None
+        assert match.group(1) in project["scripts"]
+
+    def test_the_image_installs_the_serving_extra(self, project: dict) -> None:
+        assert "'.[serve]'" in (ROOT / "Dockerfile").read_text()
+        assert "serve" in project["optional-dependencies"]
+
+    def test_release_gate_accepts_only_the_package_version(self) -> None:
+        import subprocess
+
+        from vgi_hackernews import __version__
+
+        def gate(tag: str) -> int:
+            return subprocess.run(
+                ["bash", "ci/check-version.sh", tag], cwd=ROOT, capture_output=True, check=False
+            ).returncode
+
+        assert gate(f"v{__version__}") == 0
+        assert gate("v999.0.0") != 0

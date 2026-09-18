@@ -19,14 +19,14 @@ classifiers = [
 ]
 requires-python = ">=3.13"
 dependencies = [
-    "vgi-python[http]>=0.33.0",
+    "vgi-python[http]>=0.34.1",
     # vgi-python already depends on httpx2 (pydantic's maintained httpx fork);
     # using it rather than httpx keeps the worker on one HTTP stack.
     "httpx2>=2.9.1",
 ]
 
 [project.optional-dependencies]
-serve = ["vgi-python[http,oauth]>=0.33.0", "vgi-rpc[sentry]>=0.46.0"]
+serve = ["vgi-python[http,oauth]>=0.34.1", "vgi-rpc[sentry]>=0.46.0"]
 
 [dependency-groups]
 dev = [

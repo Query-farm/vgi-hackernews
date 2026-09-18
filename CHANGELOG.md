@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.1
+
+- A container image, `ghcr.io/query-farm/vgi-hackernews`, serving both the HTTP
+  and stdio transports on `linux/amd64` and `linux/arm64`, published by the
+  fleet's shared `docker-publish` workflow after the full CI suite passes. It
+  runs as an unprivileged user with its own writable home, where vgi keeps its
+  state store.
+- Requires vgi-python 0.34.1. Earlier releases created that state store on
+  `import vgi`, so a worker whose home was not writable died before it could
+  start; that is how the image first failed, and it is fixed upstream rather
+  than only worked around here.
+- `ci/check-version.sh`, which refuses a release tag that does not match
+  `vgi_hackernews.__version__`.
+
 ## 0.1.0
 
 First release.

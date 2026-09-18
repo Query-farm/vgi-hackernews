@@ -69,7 +69,7 @@ Pin a release tag for a deployment, so the worker cannot change under you:
 
 ```sql
 ATTACH 'hackernews' (TYPE vgi,
-  LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-hackernews@v0.1.0 vgi-hackernews');
+  LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-hackernews@v0.1.1 vgi-hackernews');
 ```
 
 To serve over HTTP and attach to a URL instead, `vgi-hackernews-http` is the
@@ -78,6 +78,28 @@ HTTP entry point:
 ```sql
 ATTACH 'hackernews' (TYPE vgi, LOCATION 'http://localhost:8000');
 ```
+
+### Container image
+
+`ghcr.io/query-farm/vgi-hackernews` serves both transports, for `linux/amd64`
+and `linux/arm64`. It runs as an unprivileged user, needs no credentials, and
+only needs outbound HTTPS to `hacker-news.firebaseio.com`.
+
+```bash
+docker run -p 8000:8000 ghcr.io/query-farm/vgi-hackernews   # HTTP on :8000, /health for probes
+```
+
+```sql
+ATTACH 'hackernews' (TYPE vgi, LOCATION 'http://localhost:8000');
+
+-- Or let DuckDB spawn the container itself over stdio: nothing to install but Docker
+ATTACH 'hackernews' (TYPE vgi, LOCATION 'docker run -i --rm ghcr.io/query-farm/vgi-hackernews stdio');
+```
+
+A release tag publishes `X.Y.Z`, `X.Y` and `latest`; every push to `main`
+publishes `edge`. Images are built and published by
+`.github/workflows/docker-publish.yml` through the fleet's shared workflow,
+which boots each architecture and checks `/health` before anything is pushed.
 
 The `vgi` extension is installed from the community repository. Use it from
 [haybarn](https://pypi.org/project/haybarn/), Query Farm's DuckDB

@@ -1,0 +1,40 @@
+# Copyright 2026 Query Farm LLC - https://query.farm
+#
+# Build, test and publish the multi-arch (linux/amd64 + linux/arm64) image to
+# ghcr.io/query-farm/vgi-hackernews, through the fleet's shared workflow. It
+# boots the image on both architectures and checks /health before pushing.
+# A push to main publishes :edge; a vX.Y.Z tag publishes the release tags, after
+# ci/check-version.sh confirms the tag matches the package version.
+name: Publish image to ghcr.io
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*.*.*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    needs: [ci]
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+    uses: Query-farm/vgi-actions/.github/workflows/docker-publish.yml@v1
+    secrets: inherit
+    with:
+      image_name: vgi-hackernews
+      smoke_import: "vgi_hackernews, vgi, httpx2, pyarrow"
+      health_port: "8000"
+      version_check_cmd: "ci/check-version.sh"
