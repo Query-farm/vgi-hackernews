@@ -1,0 +1,21 @@
+# vgi-lint configuration for the Hacker News worker.
+#
+#   vgi-lint lint --audit-waivers
+#
+# lints the worker at `location` with every rule enabled. Agent-suite graders
+# (reference SQL, success criteria) live beside this file in
+# vgi-agent-tests.yaml, which the linter discovers on its own; they are kept out
+# of the catalog because anything published there is visible to the agent
+# being graded.
+
+location = "uv run hackernews_worker.py"
+select = ["ALL"]
+fail_on = "error"
+
+[per-object]
+# Every other table is a collection and is named as one. This one mirrors the
+# API's `maxitem` endpoint and holds a single value — the newest item id — so a
+# plural name would describe rows it will never have.
+"hackernews.main.max_item" = { ignore = [
+  { code = "VGI144", kind = "domain-exemption", reason = "one-row table named after the API's maxitem endpoint; there is no collection to pluralize" },
+] }

@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Lint, offline tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --all-extras
+      - name: Ruff (lint)
+        run: uv run ruff check .
+      - name: Ruff (format)
+        run: uv run ruff format --check .
+      - name: Offline tests
+        run: uv run pytest -q
+      # The scripts resolve their dependencies from their own PEP 723 headers,
+      # not from pyproject.toml; this proves those headers are sufficient.
+      - name: Entry points start from their own headers
+        run: |
+          uv run --no-project hackernews_worker.py --help > /dev/null
+          uv run --no-project serve.py --help > /dev/null
+
+  catalog:
+    name: Catalog metadata (vgi-lint, structural)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync
+      # Structural tier only: no network, so it is safe on every push. The
+      # linter is deliberately unpinned — the fleet tracks the current rule
+      # set rather than a snapshot of an old one.
+      - name: vgi-lint (structural)
+        run: >
+          uvx --from vgi-lint-check vgi-lint lint "uv run hackernews_worker.py"
+          --no-execute --no-check-links --audit-waivers --fail-on warning

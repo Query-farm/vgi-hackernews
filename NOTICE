@@ -1,0 +1,20 @@
+vgi-hackernews
+Copyright (c) 2026 Query Farm LLC - https://query.farm
+
+This product is licensed under the MIT License. See LICENSE.
+
+------------------------------------------------------------------------------
+
+Hacker News content
+
+This software reads the public Hacker News API
+(https://github.com/HackerNews/API). The stories, comments and profiles it
+returns belong to their authors and are published by Y Combinator on Hacker
+News (https://news.ycombinator.com); they are not covered by the MIT License
+above. See the site's guidelines and legal pages at
+https://news.ycombinator.com for the terms that apply to them.
+
+Neither this software nor Query Farm LLC is affiliated with, endorsed by, or
+sponsored by Y Combinator. "Hacker News" and "Y Combinator" are trademarks of
+their respective owners and are used here only to describe what this software
+connects to.

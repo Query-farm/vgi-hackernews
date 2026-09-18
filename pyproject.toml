@@ -1,0 +1,80 @@
+[project]
+name = "vgi-hackernews"
+dynamic = ["version"]
+description = "A read-only VGI (Vector Gateway Interface) worker exposing the Hacker News API to DuckDB/SQL"
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "Query Farm", email = "hello@query.farm" }]
+keywords = ["vgi", "duckdb", "arrow", "hacker-news", "hackernews", "ycombinator", "sql"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Database",
+    "Topic :: Internet :: WWW/HTTP",
+    "Typing :: Typed",
+]
+requires-python = ">=3.13"
+dependencies = [
+    "vgi-python[http]>=0.33.0",
+    # vgi-python already depends on httpx2 (pydantic's maintained httpx fork);
+    # using it rather than httpx keeps the worker on one HTTP stack.
+    "httpx2>=2.9.1",
+]
+
+[project.optional-dependencies]
+serve = ["vgi-python[http,oauth]>=0.33.0", "vgi-rpc[sentry]>=0.46.0"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    # Pinned to a minor: the rule set is version-dependent, so an unpinned ruff
+    # means CI can fail on a commit that was clean locally.
+    "ruff>=0.16,<0.17",
+    # Drives a real ATTACH in tests/test_end_to_end.py. haybarn (Query Farm's
+    # DuckDB distribution) rather than stock duckdb: its community channel
+    # serves the vgi extension build that speaks the current protocol, and it
+    # is the engine vgi-lint-check lints with. It ships release candidates
+    # only, which the rc specifier opts into.
+    "haybarn>=1.5.5rc1,<1.6",
+    # DuckDB materializes TIMESTAMP WITH TIME ZONE through pytz; without it a
+    # scan that returns one fails at fetch time, not at bind.
+    "pytz>=2024.1",
+    # tests/test_catalog.py reads the private agent-grader sidecar.
+    "pyyaml>=6",
+]
+
+[project.urls]
+Homepage = "https://query.farm"
+Documentation = "https://query.farm/vgi/"
+Repository = "https://github.com/Query-farm/vgi-hackernews"
+Issues = "https://github.com/Query-farm/vgi-hackernews/issues"
+
+[project.scripts]
+vgi-hackernews = "vgi_hackernews.worker:main"
+vgi-hackernews-http = "vgi_hackernews.worker:main_http"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "vgi_hackernews/__init__.py"
+
+[tool.ruff]
+line-length = 110
+target-version = "py313"
+
+# Selected explicitly rather than left to the default set, which changes between
+# ruff releases, so CI and a developer's shell reach the same conclusion.
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "C4"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Live tests hit the public Hacker News API; opt in with `pytest -m live`.
+addopts = "-m 'not live'"
+markers = ["live: hits the real Hacker News API over the network"]

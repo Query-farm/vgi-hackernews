@@ -1,0 +1,54 @@
+name: Live
+
+# The tiers that talk to the real Hacker News API.
+#
+# Not on push: the data is live, so a failure here can mean the site changed
+# rather than the code did. A daily run, never concurrent with itself, is the
+# honest cadence.
+
+on:
+  schedule:
+    - cron: "23 7 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: hackernews-live
+  cancel-in-progress: false
+
+jobs:
+  live:
+    name: End-to-end SQL
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync
+      - name: Live tests (real ATTACH through haybarn)
+        run: uv run pytest -q -m live
+
+  behavioural:
+    name: vgi-lint (executes every example)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: live
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync
+      # Gates on errors only. The behavioural tier's warnings include timing
+      # (VGI908 flags an example slower than 5s), and against a live public API
+      # a single slow response is weather, not a regression. The structural
+      # job in ci.yml, which is deterministic, still gates on warnings.
+      - name: vgi-lint (structural + behavioural)
+        run: >
+          uvx --from vgi-lint-check vgi-lint lint "uv run hackernews_worker.py"
+          --execute-concurrency 4 --audit-waivers --fail-on error
+      - name: Agent-suite references are sound
+        run: >
+          uvx --from vgi-lint-check vgi-lint simulate "uv run hackernews_worker.py"
+          --verify-references

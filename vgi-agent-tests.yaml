@@ -1,0 +1,124 @@
+# Private graders for the agent-suitability suite (`vgi-lint simulate`).
+#
+# The prompts are published in the catalog's vgi.agent_test_tasks tag; the
+# answers live here, keyed by task name, so the agent being graded never sees
+# them. vgi-lint discovers this file beside vgi-lint.toml.
+#
+# Everything this worker returns is live, and a reference query runs a few
+# seconds after the agent's answer does. The references are therefore chosen to
+# be stable across that gap: titles and ranks rather than scores that tick,
+# long-settled threads and polls, and yes/no questions about the live feeds
+# whose answer does not flip from one read to the next.
+#
+# Where a task's reference reads a table, check_sql reads the function behind it
+# (or the other way round), so the suite exercises both spellings of each scan.
+
+tasks:
+  - name: front_page
+    reference_sql: SELECT title FROM hackernews.main.top_stories ORDER BY rank LIMIT 5
+    ignore_column_names: true
+    success_criteria: Lists the titles of ranks 1-5 of the front page, in rank order.
+
+  - name: newest_submissions
+    reference_sql: SELECT title, author FROM hackernews.main.new_stories ORDER BY rank LIMIT 3
+    ignore_column_names: true
+    success_criteria: Reads the new-stories list (not the front page) and returns its first three entries.
+
+  - name: on_both_lists
+    reference_sql: >-
+      SELECT count(*) FROM hackernews.main.stories('top') t
+      JOIN hackernews.main.stories('best') b USING (id)
+    check_sql: >-
+      SELECT count(*) > 0 FROM hackernews.main.top_stories t
+      JOIN hackernews.main.best_stories b USING (id)
+    ignore_column_names: true
+    success_criteria: Joins the front page and the best list on item id and counts the overlap.
+
+  - name: best_right_now
+    reference_sql: SELECT title FROM hackernews.main.best_stories ORDER BY score DESC LIMIT 1
+    ignore_column_names: true
+    success_criteria: Uses the best list and picks its highest-scoring story.
+
+  - name: busiest_ask_hn
+    reference_sql: SELECT title FROM hackernews.main.ask_stories ORDER BY descendants DESC, rank LIMIT 1
+    ignore_column_names: true
+    success_criteria: Uses the Ask HN list and ranks by descendants (total comments), not by score.
+
+  - name: top_show_hn
+    reference_sql: SELECT title FROM hackernews.main.show_stories ORDER BY score DESC LIMIT 1
+    ignore_column_names: true
+    success_criteria: Uses the Show HN list and picks its highest-scoring post.
+
+  - name: who_is_hiring
+    reference_sql: SELECT title FROM hackernews.main.job_stories ORDER BY rank
+    unordered: true
+    ignore_column_names: true
+    success_criteria: Lists the titles from the jobs list, not the monthly 'Who is hiring?' story threads.
+
+  - name: dropbox_launch
+    reference_sql: SELECT title, author FROM hackernews.main.item(8863)
+    ignore_column_names: true
+    success_criteria: Looks the item up by id and reports its title and its author (dhouston).
+
+  - name: poll_results
+    reference_sql: >-
+      SELECT o.score FROM (SELECT unnest(parts) AS part FROM hackernews.main.item(126809)) p,
+      LATERAL hackernews.main.item(p.part) o ORDER BY o.score DESC
+    ignore_column_names: true
+    success_criteria: >-
+      Follows the poll's parts to each option and reports the options' scores (their vote
+      counts), largest first.
+
+  - name: thread_regular
+    reference_sql: >-
+      SELECT author FROM hackernews.main.comments(8863) WHERE author IS NOT NULL
+      GROUP BY author ORDER BY count(*) DESC, author LIMIT 1
+    ignore_column_names: true
+    success_criteria: Walks the whole comment tree (every depth, not only direct replies) and counts by author.
+
+  - name: comment_search
+    reference_sql: >-
+      SELECT count(*) FROM hackernews.main.comments(8863)
+      WHERE hackernews.main.html_to_text(text) ILIKE '%don''t%'
+    ignore_column_names: true
+    success_criteria: Searches the text of every comment in the thread for the word and counts the matches.
+
+  - name: account_age
+    reference_sql: SELECT year(created_at) FROM hackernews.main.user('pg')
+    ignore_column_names: true
+    success_criteria: Looks the user up by exact username and reads the year of created_at (2006).
+
+  - name: recent_posting_mix
+    reference_sql: >-
+      SELECT count(*) FILTER (WHERE type = 'story')
+      FROM (SELECT type FROM hackernews.main.submissions('pg') LIMIT 100)
+    ignore_column_names: true
+    success_criteria: >-
+      Uses the user's submissions, limited to the newest 100, and counts those whose type is
+      story.
+
+  - name: site_activity
+    reference_sql: >-
+      SELECT count(*) FILTER (WHERE type = 'comment') > count(*) FILTER (WHERE type = 'story')
+      FROM hackernews.main.recent_items(300)
+    ignore_column_names: true
+    success_criteria: Reads the newest 300 items site-wide and compares comment and story counts (yes).
+
+  - name: what_is_changing
+    reference_sql: SELECT DISTINCT type FROM hackernews.main.updated_items ORDER BY type
+    check_sql: SELECT count(*) > 0 FROM hackernews.main.updated_items()
+    unordered: true
+    ignore_column_names: true
+    success_criteria: Reads the change feed of items and reports the distinct item types in it.
+
+  - name: active_accounts
+    reference_sql: SELECT bool_or(karma > 1000) FROM hackernews.main.updated_users
+    check_sql: SELECT count(*) > 0 FROM hackernews.main.updated_users()
+    ignore_column_names: true
+    success_criteria: Reads the change feed of user profiles and checks their karma (yes).
+
+  - name: site_size
+    reference_sql: SELECT id // 1000000 FROM hackernews.main.max_item
+    check_sql: SELECT id > 40000000 FROM hackernews.main.max_item()
+    ignore_column_names: true
+    success_criteria: Uses the newest item id as the running count of items and reports it in whole millions.
