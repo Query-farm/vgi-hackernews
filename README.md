@@ -42,6 +42,11 @@ FROM hackernews.comments((SELECT id FROM hackernews.top_stories WHERE rank = 1))
 WHERE NOT deleted ORDER BY path;
 ```
 
+**Using this from an LLM or agent?** [`llms.txt`](llms.txt) is a self-contained
+guide in the [llmstxt.org](https://llmstxt.org) format: every table, function
+and column, the rules that keep answers correct, and recipes that the live test
+suite executes verbatim.
+
 ## Run
 
 ```bash
@@ -58,6 +63,13 @@ from inside the clone. Anywhere else, point `LOCATION` at the repository and let
 ```sql
 ATTACH 'hackernews' (TYPE vgi,
   LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-hackernews vgi-hackernews');
+```
+
+Pin a release tag for a deployment, so the worker cannot change under you:
+
+```sql
+ATTACH 'hackernews' (TYPE vgi,
+  LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-hackernews@v0.1.0 vgi-hackernews');
 ```
 
 To serve over HTTP and attach to a URL instead, `vgi-hackernews-http` is the
@@ -198,9 +210,25 @@ plain text.
 **Each row is a request.** The API has no search, no filtering and no batch
 endpoint: a ranking returns bare ids, and each id costs one more request.
 Requests run 32 at a time over pooled connections — 500 items in a second or two
-— and paged scans emit 100 rows per batch, in list order. A bare `LIMIT` reads
-only what it returns; an `ORDER BY`, an aggregate, or a `WHERE` on a column has
-to read the whole list first.
+— and paged scans emit 100 rows per batch, in list order.
+
+**How `LIMIT` saves requests.** A `LIMIT` is never sent to the worker: DuckDB
+has no way to pass one to a table function. It works anyway, because DuckDB
+stops pulling pages once the limit is met and a paged scan only fetches when
+pulled — so `LIMIT 10` costs one page, and so does `WHERE type = 'story' LIMIT
+10`. What cannot stop early is anything that must see every row first: a
+`WHERE` with no `LIMIT` (`WHERE rank <= 30` fetches all 500 stories, since the
+predicate is not sent either), an aggregate, or `ORDER BY ... LIMIT`. Rows
+arrive in list order, so bound the scan in a subquery and sort outside it:
+
+```sql
+-- One page of requests, where ORDER BY rank LIMIT 30 costs five
+SELECT rank, title FROM (SELECT * FROM hackernews.top_stories LIMIT 30) ORDER BY rank;
+```
+
+The walks have their own bounds, because a `LIMIT` cannot shorten work done
+inside a single batch: `recent_items(count)` takes how far back to go, and
+`comments(id, max_depth => n)` how deep to descend.
 
 **Rankings are snapshots.** A list's ids are read once when its scan starts and
 frozen for the rest of it, so each `rank` appears exactly once even while the

@@ -16,6 +16,8 @@ from typing import Any
 
 import pytest
 
+from .test_llms_txt import sql_statements
+
 pytestmark = pytest.mark.live
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -139,3 +141,15 @@ class TestRowsMaterialize:
     def test_usernames_are_case_sensitive(self, con: Any) -> None:
         assert one(con, "SELECT count(*) FROM hackernews.main.user('pg')") == 1
         assert one(con, "SELECT count(*) FROM hackernews.main.user('pg/../x')") == 0
+
+
+class TestLlmsTxtRecipes:
+    """An agent will run these verbatim, so each must bind, execute and return rows."""
+
+    @pytest.mark.parametrize(
+        "statement",
+        [s for s in sql_statements() if s.upper().startswith(("SELECT", "WITH"))],
+        ids=lambda s: " ".join(s.split())[:60],
+    )
+    def test_recipe_returns_rows(self, con: Any, statement: str) -> None:
+        assert con.execute(statement).fetchall(), statement

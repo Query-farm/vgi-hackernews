@@ -20,6 +20,14 @@ First release.
 - `html_to_text()`, because comment bodies are entity-escaped HTML and a plain
   text search on them silently misses.
 
+### For agents
+
+- `llms.txt`, a self-contained usage guide in the
+  [llmstxt.org](https://llmstxt.org) format: every table, function and column,
+  the rules that keep answers correct, and recipes. `tests/test_llms_txt.py`
+  fails if a table, function, column or feed name goes missing from it, and
+  every recipe runs in the live suite.
+
 ### Validation
 
 - vgi-lint with every rule enabled: no findings, assurance level L2

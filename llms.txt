@@ -1,0 +1,143 @@
+# vgi-hackernews
+
+> A read-only VGI worker that puts the live Hacker News API into DuckDB as ordinary SQL: the front page and the other story rankings, any story or comment by id, whole discussion threads, and user profiles. No credentials. Attach it once, then query objects in the `hackernews` catalog.
+
+**Attaching.** Use haybarn (Query Farm's DuckDB distribution, `pip install haybarn`), whose community channel carries the current `vgi` extension. From anywhere, let `uvx` fetch the worker from GitHub:
+
+```sql
+FORCE INSTALL vgi FROM community;
+LOAD vgi;
+ATTACH 'hackernews' (TYPE vgi,
+  LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-hackernews vgi-hackernews');
+```
+
+Append a release tag to pin a version (`git+https://github.com/Query-farm/vgi-hackernews@v0.1.0`). From inside a clone of the repository, `LOCATION 'uv run hackernews_worker.py'` works too. Objects live in schema `main`, which is the default, so `hackernews.top_stories` and `hackernews.main.top_stories` are the same table. Discover the surface in SQL with `SELECT table_name, comment FROM duckdb_tables() WHERE database_name = 'hackernews'` and `SELECT function_name, description FROM duckdb_functions() WHERE database_name = 'hackernews'`.
+
+**Tables** (no arguments, no parentheses):
+
+- `top_stories` — the front page ranking, up to 500 deep. Ranks 1-30 are the site's first page. Job ads are ranked here too; filter `type = 'story'` to drop them.
+- `new_stories` — the 500 newest submissions, newest first (roughly the last ten hours).
+- `best_stories` — the highest-voted recent stories, typically 200.
+- `ask_stories` — Ask HN questions, as the Ask page ranks them. The question is in `text`; `url` is NULL.
+- `show_stories` — Show HN launches, as the Show page ranks them.
+- `job_stories` — job ads from Y Combinator companies. Not the monthly "Who is hiring?" threads, which are ordinary stories.
+- `updated_items` — items the site's change feed lists as just changed (new replies, votes, edits), in their current state. A few dozen rows.
+- `updated_users` — profiles the change feed lists as just changed, usually because their karma moved. A few dozen rows.
+- `max_item` — one row, column `id`: the newest item id. Ids are assigned in sequence to every item, so it is also the count of everything ever posted.
+
+**Functions:**
+
+- `item(id)` — any item (story, comment, job, poll, poll option) by numeric id. Named argument `cache_ttl => seconds` (default 0, off).
+- `user(username)` — a public profile by exact, case-sensitive username. Named argument `cache_ttl`.
+- `comments(id)` — every reply under an item, at every depth, one row per reply; the item itself is not included. Named argument `max_depth` (0 = unlimited, 1 = direct replies only).
+- `stories(feed)` — one ranking chosen by name: `'top'`, `'new'`, `'best'`, `'ask'`, `'show'` or `'job'`. The six ranking tables are this function with the name filled in.
+- `submissions(username)` — everything a user has posted, newest first, as item rows.
+- `recent_items(count)` — the newest `count` item ids site-wide (1 to 50,000), walked back from the newest, as item rows. Mostly comments.
+- `html_to_text(html)` — scalar: plain text from the HTML in `text` and `about`.
+- `updated_items()`, `updated_users()`, `max_item()` — the scan functions behind the tables of the same names. Prefer the tables.
+
+**Two kinds of argument passing — the most common mistake.** `item`, `user` and `comments` accept a literal, a scalar subquery, or a column from another table under `LATERAL`. `stories`, `submissions` and `recent_items` accept only a literal or constant expression: DuckDB rejects a subquery there with `Table function cannot contain subqueries`, and a correlated column cannot be passed at all. To reach the thread of a story you found by query, pass the subquery to `comments()` directly; to read a posting history for a username you found by query, run the lookup first and paste the name in as a literal.
+
+**Item columns** (every item-returning object — the ranking tables, `updated_items`, `item()`, `comments()`, `submissions()`, `recent_items()` — uses these, in this order):
+
+- `id` `BIGINT` — the item id.
+- `type` `VARCHAR` — `'story'`, `'comment'`, `'job'`, `'poll'` or `'pollopt'`. Ask HN and Show HN posts are `'story'`.
+- `author` `VARCHAR` — username of the poster. The API calls this `by`; it is renamed because `BY` is a SQL keyword. NULL on deleted items.
+- `created_at` `TIMESTAMP WITH TIME ZONE` — when it was posted, in UTC. The API calls this `time` and sends Unix seconds.
+- `title` `VARCHAR` — headline of a story, poll or job, as plain text. NULL for comments.
+- `url` `VARCHAR` — link a story points to. NULL for text posts and comments.
+- `text` `VARCHAR` — body of a comment, text post, job or poll option, as entity-escaped HTML.
+- `score` `BIGINT` — points on a story, poll or job; votes on a poll option. NULL for comments: Hacker News does not publish comment scores.
+- `descendants` `BIGINT` — number of live comments in the whole thread under a story or poll. Deleted and dead comments are not counted.
+- `parent` `BIGINT` — for a comment, the id of the comment or story it replies to.
+- `poll` `BIGINT` — for a poll option, the id of its poll.
+- `kids` `BIGINT[]` — ids of the direct replies in display order; empty when none.
+- `parts` `BIGINT[]` — for a poll, the ids of its options.
+- `deleted` `BOOLEAN`, `dead` `BOOLEAN` — never NULL, so `WHERE NOT deleted AND NOT dead` works.
+
+The ranking tables and `updated_items` add `rank` `INTEGER` first (1-based position in the list). `comments()` adds `root_id` `BIGINT` (the id it was called with), `depth` `INTEGER` (1 = direct reply) and `path` `INTEGER[]` (position among siblings at each level) first; `ORDER BY path` lists the thread exactly as the site displays it.
+
+**User columns** (`user()`, and `updated_users` after its `rank`): `username` `VARCHAR` (the API's user `id`; matches `author` on items), `created_at` `TIMESTAMP WITH TIME ZONE`, `karma` `BIGINT`, `about` `VARCHAR` (HTML), `submitted` `BIGINT[]` (every item id the user posted, newest first — can hold tens of thousands).
+
+**Rules that avoid wrong answers:**
+
+- Search `text` and `about` only through `html_to_text()`. In the raw column an apostrophe is `&#x27;` and a slash is `&#x2F;`, so `text ILIKE '%don''t%'` silently misses. Titles are already plain text.
+- Usernames are case-sensitive: `user('pg')` finds Paul Graham, `user('PG')` finds nothing. An unknown username or id returns no rows, not an error.
+- To compare a thread's size with `descendants`, count `comments()` rows `WHERE NOT deleted AND NOT dead`.
+- Comments have no score. "Top comments" means the first rows by `path` (the site's ranked order), not a sort on `score`.
+- Everything is live. Rankings, scores and comment counts change between queries; a ranking is read once per scan, so `rank` is consistent within one query.
+- There is no search endpoint and no archive. You cannot search all of Hacker News history or see past rankings. To find stories on a topic, filter what is reachable: the ranking tables, `recent_items()`, or a known user's `submissions()`, by `title ILIKE`.
+
+**Cost.** The API has no batch or search endpoint, so every row is one HTTP request; requests run 32 at a time. The scans (`stories` and the ranking tables, `submissions`, `recent_items`) stream 100 rows per batch in list order, and DuckDB stops pulling pages as soon as a `LIMIT` is satisfied, even after a `WHERE`: `WHERE type = 'story' LIMIT 10` reads one page. Neither the limit nor the predicate reaches the worker, though, so a `WHERE` with no `LIMIT` reads the whole list (`WHERE rank <= 30` fetches all 500 stories), and `ORDER BY ... LIMIT` or an aggregate reads everything before answering. Because rows arrive in list order, the cheap way to take the top of a list is to bound it in a subquery and sort outside: `SELECT * FROM (SELECT * FROM hackernews.main.top_stories LIMIT 30) ORDER BY rank` costs one page, where `ORDER BY rank LIMIT 30` costs five. The same pattern bounds a prolific user's history: `(SELECT * FROM hackernews.main.submissions('pg') LIMIT 200)`, filtered outside. `comments()` walks its whole tree before returning (a large thread takes a few seconds); use `max_depth => 1` for just the direct replies, and keep the driving side of a `LATERAL` small (the top ten stories, not all 500). Nothing is cached unless `cache_ttl` is passed to `item()` or `user()`.
+
+**Recipes:**
+
+```sql
+-- The front page right now: the first 30 slots, read as one page
+SELECT rank, title, score, descendants AS comments, author
+FROM (SELECT * FROM hackernews.main.top_stories LIMIT 30) ORDER BY rank;
+
+-- Which sites dominate the front page
+SELECT regexp_extract(url, '^https?://(?:www\.)?([^/]+)', 1) AS site, count(*) AS stories
+FROM hackernews.main.top_stories WHERE url IS NOT NULL
+GROUP BY site ORDER BY stories DESC, site LIMIT 15;
+
+-- The discussion of the current number one story, as the site displays it
+SELECT depth, author, hackernews.main.html_to_text(text) AS comment
+FROM hackernews.main.comments((SELECT id FROM hackernews.main.top_stories WHERE rank = 1))
+WHERE NOT deleted AND NOT dead ORDER BY path;
+
+-- The first three top-level comments on each of the top five stories
+SELECT s.rank, s.title, c.author, hackernews.main.html_to_text(c.text) AS comment
+FROM (SELECT rank, id, title FROM hackernews.main.top_stories LIMIT 5) s,
+     LATERAL hackernews.main.comments(s.id, max_depth => 1) c
+WHERE NOT c.deleted AND NOT c.dead AND c.path[1] <= 3
+ORDER BY s.rank, c.path;
+
+-- The karma of everyone posting on the first page
+SELECT s.rank, s.author, u.karma, u.created_at AS joined
+FROM (SELECT rank, author FROM hackernews.main.top_stories LIMIT 30) s,
+     LATERAL hackernews.main.user(s.author, cache_ttl => 300) u
+ORDER BY s.rank;
+
+-- A user's profile, and the best-scoring stories among their latest 200 posts
+SELECT username, created_at, karma, len(submitted) AS posts FROM hackernews.main.user('pg');
+SELECT title, score, created_at
+FROM (SELECT * FROM hackernews.main.submissions('pg') LIMIT 200)
+WHERE type = 'story' ORDER BY score DESC LIMIT 10;
+
+-- Follow ids: how a poll's votes split across its options
+SELECT hackernews.main.html_to_text(o.text) AS option, o.score AS votes
+FROM (SELECT unnest(parts) AS part FROM hackernews.main.item(126809)) p,
+     LATERAL hackernews.main.item(p.part) o
+ORDER BY votes DESC;
+
+-- Search the text of one thread
+SELECT author, hackernews.main.html_to_text(text) AS comment
+FROM hackernews.main.comments(8863)
+WHERE hackernews.main.html_to_text(text) ILIKE '%rsync%' ORDER BY path;
+
+-- The newest stories submitted anywhere, found among the latest 1,000 items
+SELECT id, title, author, created_at FROM hackernews.main.recent_items(1000)
+WHERE type = 'story' ORDER BY id DESC;
+
+-- Stories on the front page that are also on the best list
+SELECT t.rank AS top_rank, b.rank AS best_rank, t.title
+FROM hackernews.main.top_stories t JOIN hackernews.main.best_stories b USING (id)
+ORDER BY t.rank;
+```
+
+## Docs
+
+- [README](https://raw.githubusercontent.com/Query-farm/vgi-hackernews/main/README.md): installation, the full surface, cost model and design notes
+- [Hacker News API](https://github.com/HackerNews/API): the upstream Firebase API this worker reads
+
+## Source
+
+- [schemas.py](https://raw.githubusercontent.com/Query-farm/vgi-hackernews/main/vgi_hackernews/schemas.py): every column, its type and its documentation
+- [worker.py](https://raw.githubusercontent.com/Query-farm/vgi-hackernews/main/vgi_hackernews/worker.py): the catalog — tables, categories, examples and agent-facing documentation
+
+## Optional
+
+- [CHANGELOG](https://raw.githubusercontent.com/Query-farm/vgi-hackernews/main/CHANGELOG.md): release history
+- [VGI](https://query.farm/vgi/): the Vector Gateway Interface, which connects DuckDB to workers like this one
