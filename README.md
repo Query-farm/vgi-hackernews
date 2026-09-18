@@ -30,11 +30,12 @@
 > locally without a request.
 
 ```sql
-ATTACH 'hackernews' (TYPE vgi, LOCATION 'uv run hackernews_worker.py');
+ATTACH 'hackernews' (TYPE vgi,
+  LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-hackernews vgi-hackernews');
 
 -- The front page, right now
 SELECT rank, title, score, descendants AS comments
-FROM hackernews.top_stories ORDER BY rank LIMIT 30;
+FROM (SELECT * FROM hackernews.top_stories LIMIT 30) ORDER BY rank;
 
 -- The whole discussion under today's #1 story, in the order the site shows it
 SELECT depth, author, hackernews.html_to_text(text) AS comment
@@ -49,35 +50,47 @@ suite executes verbatim.
 
 ## Run
 
-```bash
-uv run hackernews_worker.py        # stdio
-uv run serve.py --port 8000        # HTTP
-```
-
-Both scripts carry PEP 723 headers pinning their dependencies, so they run from
-a fresh clone with nothing installed. `LOCATION 'uv run hackernews_worker.py'`
-resolves the script against the working directory, though, so it only works
-from inside the clone. Anywhere else, point `LOCATION` at the repository and let
-`uvx` fetch and cache the worker:
+Nothing to clone or install: `uvx` fetches the worker from GitHub, builds it
+once, and runs it from its cache. All it needs is
+[uv](https://docs.astral.sh/uv/). DuckDB spawns the worker itself, so the
+`ATTACH` is the whole setup:
 
 ```sql
+FORCE INSTALL vgi FROM community;
+LOAD vgi;
 ATTACH 'hackernews' (TYPE vgi,
   LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-hackernews vgi-hackernews');
 ```
 
-Pin a release tag for a deployment, so the worker cannot change under you:
+Run it from [haybarn](https://pypi.org/project/haybarn/), Query Farm's DuckDB
+distribution, whose community channel carries the `vgi` extension build that
+speaks the current VGI protocol.
+
+An unpinned `LOCATION` tracks `main`: each launch asks GitHub for the current
+commit and rebuilds only when it has moved. Pin a release tag for a
+deployment, so the worker cannot change under you:
 
 ```sql
 ATTACH 'hackernews' (TYPE vgi,
   LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-hackernews@v0.1.1 vgi-hackernews');
 ```
 
-To serve over HTTP and attach to a URL instead, `vgi-hackernews-http` is the
-HTTP entry point:
+### As an HTTP server
+
+The same no-clone install serves the HTTP transport, for one worker shared by
+several clients or run on another machine:
+
+```bash
+uvx --from git+https://github.com/Query-farm/vgi-hackernews vgi-hackernews-http --port 8000
+```
 
 ```sql
 ATTACH 'hackernews' (TYPE vgi, LOCATION 'http://localhost:8000');
 ```
+
+Pass `--port` explicitly: without it a free port is picked at random. The
+server listens on `127.0.0.1` unless started with `--host 0.0.0.0`, and answers
+`/health` for probes.
 
 ### Container image
 
@@ -101,15 +114,23 @@ publishes `edge`. Images are built and published by
 `.github/workflows/docker-publish.yml` through the fleet's shared workflow,
 which boots each architecture and checks `/health` before anything is pushed.
 
-The `vgi` extension is installed from the community repository. Use it from
-[haybarn](https://pypi.org/project/haybarn/), Query Farm's DuckDB
-distribution, whose community channel carries the extension build that speaks
-the current VGI protocol:
+### From a clone
+
+Inside a checkout, two scripts run the worker straight from the working tree,
+which is how to try a local change. Each carries a PEP 723 header pinning its
+dependencies, so nothing needs installing first:
+
+```bash
+uv run hackernews_worker.py        # stdio: what DuckDB spawns
+uv run serve.py --port 8000        # HTTP
+```
 
 ```sql
-FORCE INSTALL vgi FROM community;
-LOAD vgi;
+ATTACH 'hackernews' (TYPE vgi, LOCATION 'uv run hackernews_worker.py');
 ```
+
+That `LOCATION` resolves the script against DuckDB's working directory, so it
+only works when DuckDB is started inside the clone.
 
 ### Developing
 
