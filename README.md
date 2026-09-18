@@ -72,7 +72,7 @@ deployment, so the worker cannot change under you:
 
 ```sql
 ATTACH 'hackernews' (TYPE vgi,
-  LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-hackernews@v0.1.1 vgi-hackernews');
+  LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-hackernews@v0.1.2 vgi-hackernews');
 ```
 
 ### As an HTTP server

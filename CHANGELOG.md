@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.2
+
+Documentation only; the worker is unchanged from 0.1.1.
+
+- The README leads with the no-clone install:
+  `uvx --from git+https://github.com/Query-farm/vgi-hackernews vgi-hackernews`
+  as the `ATTACH` location, needing only uv. An unpinned location tracks
+  `main`; a release tag pins it.
+- The HTTP server gets the same no-clone form, with the explicit `--port` it
+  needs (the entry point's default of 0 picks a random free port).
+- Running from a checkout moves to its own "From a clone" section, as the way
+  to try local changes.
+
 ## 0.1.1
 
 - A container image, `ghcr.io/query-farm/vgi-hackernews`, serving both the HTTP
