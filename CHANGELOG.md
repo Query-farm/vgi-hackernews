@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.2.0
+
+- Speaks VGI protocol 3.2: requires vgi-python 0.50.0 and vgi-rpc 0.53.1. The
+  published `vgi` extension matches the protocol version exactly, so 0.1.x
+  workers are rejected by the current extension at `ATTACH`.
+- Table keys (each table's primary key, the unique `rank` and the not-null
+  columns) are declared as canonical constraint records, the form protocol
+  vgi.v3 carries them in. The keys themselves are unchanged.
+- The live tier attaches through haybarn 2.0, whose community channel serves
+  the 3.2 extension.
+- The catalog's display title is now "Hacker News", with a one-line subtitle
+  for listings.
+
 ## 0.1.2
 
 Documentation only; the worker is unchanged from 0.1.1.
