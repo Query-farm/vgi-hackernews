@@ -75,7 +75,7 @@ class TestTables:
 
     @pytest.mark.parametrize("table", TABLES, ids=lambda t: t.name)
     def test_has_a_primary_key(self, table: Any) -> None:
-        assert table.primary_key
+        assert any(c.definition.kind == "PRIMARY_KEY" for c in table.constraints)
 
     def test_every_feed_has_a_table(self) -> None:
         bound = {t.arguments.positional[0].as_py() for t in TABLES if t.arguments is not None}

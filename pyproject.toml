@@ -19,14 +19,14 @@ classifiers = [
 ]
 requires-python = ">=3.13"
 dependencies = [
-    "vgi-python[http]>=0.34.1",
+    "vgi-python[http]>=0.50.0",
     # vgi-python already depends on httpx2 (pydantic's maintained httpx fork);
     # using it rather than httpx keeps the worker on one HTTP stack.
     "httpx2>=2.9.1",
 ]
 
 [project.optional-dependencies]
-serve = ["vgi-python[http,oauth]>=0.34.1", "vgi-rpc[sentry]>=0.46.0"]
+serve = ["vgi-python[http,oauth]>=0.50.0", "vgi-rpc[sentry]>=0.53.1"]
 
 [dependency-groups]
 dev = [
@@ -39,7 +39,7 @@ dev = [
     # serves the vgi extension build that speaks the current protocol, and it
     # is the engine vgi-lint-check lints with. It ships release candidates
     # only, which the rc specifier opts into.
-    "haybarn>=1.5.5rc1,<1.6",
+    "haybarn>=2.0.0rc11,<2.1",
     # DuckDB materializes TIMESTAMP WITH TIME ZONE through pytz; without it a
     # scan that returns one fails at fetch time, not at bind.
     "pytz>=2024.1",

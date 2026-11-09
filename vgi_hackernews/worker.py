@@ -17,8 +17,9 @@ import sys
 import pyarrow as pa
 from vgi import Worker
 from vgi.arguments import Arguments
-from vgi.catalog import Catalog, ReadOnlyCatalogInterface, Schema
+from vgi.catalog import Catalog, ReadOnlyCatalogInterface, Schema, constraint_record
 from vgi.catalog.catalog_interface import CatalogInfo
+from vgi.catalog.constraints import ConstraintInfo
 from vgi.catalog.descriptors import Table
 
 from vgi_hackernews import __version__
@@ -383,6 +384,31 @@ _SCHEMA_TAGS = {
 # --------------------------------------------------------------------------
 
 
+def _keys(
+    table: str,
+    *,
+    primary_key: str,
+    unique: tuple[str, ...] = (),
+    not_null: tuple[str, ...] = (),
+) -> tuple[ConstraintInfo, ...]:
+    """The canonical constraint records for one table in schema ``main``.
+
+    Every key here holds for every row the table can return, so each is attested
+    ENFORCED over ALL_ROWS, the only records the extension reads.
+    """
+
+    def record(id: str, kind: str, column: str) -> ConstraintInfo:
+        return constraint_record(
+            ["main"], table, id, kind, [[column]], enforcement="ENFORCED", validation="ALL_ROWS"
+        )
+
+    return (
+        record("pk", "PRIMARY_KEY", primary_key),
+        *(record(f"unique_{c}", "UNIQUE", c) for c in unique),
+        *(record(f"not_null_{c}", "NOT_NULL", c) for c in not_null),
+    )
+
+
 def _feed_table(
     *,
     name: str,
@@ -414,9 +440,7 @@ def _feed_table(
             },
         ),
         column_comments=column_comments(FEED_SCHEMA),
-        primary_key=(("id",),),
-        unique=(("rank",),),
-        not_null=("rank", "id"),
+        constraints=_keys(name, primary_key="id", unique=("rank",), not_null=("rank", "id")),
         cardinality_estimate=cardinality_estimate,
         cardinality_max=cardinality_max,
     )
@@ -632,9 +656,7 @@ _UPDATED_ITEMS_TABLE = Table(
         },
     ),
     column_comments=column_comments(UPDATED_ITEMS_SCHEMA),
-    primary_key=(("id",),),
-    unique=(("rank",),),
-    not_null=("rank", "id"),
+    constraints=_keys("updated_items", primary_key="id", unique=("rank",), not_null=("rank", "id")),
     cardinality_estimate=60,
 )
 
@@ -673,9 +695,9 @@ _UPDATED_USERS_TABLE = Table(
         },
     ),
     column_comments=column_comments(UPDATED_USERS_SCHEMA),
-    primary_key=(("username",),),
-    unique=(("rank",),),
-    not_null=("rank", "username"),
+    constraints=_keys(
+        "updated_users", primary_key="username", unique=("rank",), not_null=("rank", "username")
+    ),
     cardinality_estimate=20,
 )
 
@@ -711,8 +733,7 @@ _MAX_ITEM_TABLE = Table(
         },
     ),
     column_comments=column_comments(MAX_ITEM_SCHEMA),
-    primary_key=(("id",),),
-    not_null=("id",),
+    constraints=_keys("max_item", primary_key="id", not_null=("id",)),
     cardinality_estimate=1,
     cardinality_max=1,
 )
