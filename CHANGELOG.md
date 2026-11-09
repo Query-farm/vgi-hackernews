@@ -10,7 +10,7 @@
   vgi.v3 carries them in. The keys themselves are unchanged.
 - The live tier attaches through haybarn 2.0, whose community channel serves
   the 3.2 extension.
-- The catalog's display title is now "Hacker News", with a one-line subtitle
+- The catalog's display title is now "Hacker News API", with a one-line subtitle
   for listings.
 
 ## 0.1.2
