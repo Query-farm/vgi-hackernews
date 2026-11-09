@@ -265,7 +265,8 @@ _CATEGORIES = json.dumps(
 
 _CATALOG_TAGS = {
     **_CLASSIFIERS,
-    "vgi.title": "Hacker News — Stories, Threads & Users",
+    "vgi.title": "Hacker News",
+    "vgi.subtitle": "Stories, comment threads and user profiles from the Hacker News API, in SQL.",
     "vgi.source_url": SOURCE_URL,
     "vgi.author": "Query Farm LLC <hello@query.farm>",
     "vgi.copyright": (
