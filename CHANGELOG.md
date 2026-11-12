@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0
+
+- Speaks VGI protocol 3.3: requires vgi-python 0.51.0. The published `vgi`
+  extension matches major+minor exactly, so 0.2.x workers are rejected by the
+  current extension at `ATTACH`. No SQL surface changes: the scan functions
+  behind the tables (`stories(feed)`, `updated_items()`, `updated_users()`,
+  `max_item()`) stay public.
+
 ## 0.2.0
 
 - Speaks VGI protocol 3.2: requires vgi-python 0.50.0 and vgi-rpc 0.53.1. The
