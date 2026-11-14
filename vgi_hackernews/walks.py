@@ -248,6 +248,18 @@ def _submitted(username: str) -> list[int]:
     return api.int_list((profile or {}).get("submitted"))
 
 
+#: A user's history joined back to what each comment answered: the parent of a
+#: comment is another item, so ``item()`` under LATERAL fetches it.
+SUBMISSIONS_REPLIES_EXAMPLE = (
+    "Who and what a user's latest comments were replying to",
+    "SELECT c.created_at, p.type AS replying_to, p.author AS to_whom, "
+    "coalesce(p.title, hackernews.main.html_to_text(p.text)) AS what "
+    "FROM (SELECT * FROM hackernews.main.submissions('dang') LIMIT 20) c, "
+    "LATERAL hackernews.main.item(c.parent) p "
+    "WHERE c.type = 'comment' ORDER BY c.created_at DESC",
+)
+
+
 @init_single_worker
 class SubmissionsFunction(TableFunctionGenerator[SubmissionsArgs, IdListState]):
     """A user's posts, newest first, one page per tick."""
@@ -294,6 +306,7 @@ class SubmissionsFunction(TableFunctionGenerator[SubmissionsArgs, IdListState]):
                     "(SELECT * FROM hackernews.main.submissions('dang') LIMIT 20) "
                     "WHERE type = 'comment' ORDER BY created_at DESC",
                 ),
+                SUBMISSIONS_REPLIES_EXAMPLE,
             ),
         )
         examples = [
@@ -357,6 +370,18 @@ class RecentArgs:
     ]
 
 
+#: The site-wide stream driving per-author profile lookups: who is commenting
+#: right now, and how established they are.
+RECENT_COMMENTERS_EXAMPLE = (
+    "The busiest commenters among the newest 300 items site-wide, with their karma and account age",
+    "SELECT r.author, count(*) AS comments, u.karma, u.created_at AS joined "
+    "FROM (SELECT author FROM hackernews.main.recent_items(300) "
+    "WHERE type = 'comment' AND author IS NOT NULL) r, "
+    "LATERAL hackernews.main.user(r.author, cache_ttl => 300) u "
+    "GROUP BY r.author, u.karma, u.created_at ORDER BY comments DESC, r.author LIMIT 10",
+)
+
+
 @init_single_worker
 class RecentItemsFunction(TableFunctionGenerator[RecentArgs, RecentState]):
     """The newest items on the site, of every type, walking back from the newest id."""
@@ -403,6 +428,7 @@ class RecentItemsFunction(TableFunctionGenerator[RecentArgs, RecentState]):
                     "SELECT id, title, author, created_at FROM hackernews.main.recent_items(1000) "
                     "WHERE type = 'story' ORDER BY id DESC",
                 ),
+                RECENT_COMMENTERS_EXAMPLE,
             ),
         )
         examples = [

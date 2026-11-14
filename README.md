@@ -195,6 +195,14 @@ SELECT s.rank, s.author, u.karma
 FROM (SELECT rank, author FROM hackernews.top_stories WHERE rank <= 30) s,
      LATERAL hackernews.user(s.author, cache_ttl => 300) u
 ORDER BY s.rank;
+
+-- A paged scan can drive one too: who is commenting most site-wide right now
+SELECT r.author, count(*) AS comments, u.karma, u.created_at AS joined
+FROM (SELECT author FROM hackernews.recent_items(300)
+      WHERE type = 'comment' AND author IS NOT NULL) r,
+     LATERAL hackernews.user(r.author, cache_ttl => 300) u
+GROUP BY r.author, u.karma, u.created_at
+ORDER BY comments DESC, r.author LIMIT 10;
 ```
 
 **Paged scans** emit one page of 100 rows per tick, so a `LIMIT` stops the walk
@@ -322,7 +330,7 @@ executable example run against the live worker, every scan probed for prompt
 first rows. One waiver is declared and audited: `max_item` is singular among
 plural tables because it holds one value and mirrors the API's `maxitem`.
 
-The agent-suitability suite asks an analyst 17 questions that between them
+The agent-suitability suite asks an analyst 19 questions that between them
 touch every table and function. The prompts are published in the catalog; the
 graders — reference SQL and success criteria — live in `vgi-agent-tests.yaml`,
 out of the agent's sight. `vgi-lint simulate --verify-references` confirms

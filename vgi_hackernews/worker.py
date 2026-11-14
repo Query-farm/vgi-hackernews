@@ -33,7 +33,7 @@ from vgi_hackernews.lists import (
 from vgi_hackernews.lookups import LOOKUP_FUNCTIONS
 from vgi_hackernews.meta import column_comments, docs, examples, keywords
 from vgi_hackernews.schemas import FEED_SCHEMA, MAX_ITEM_SCHEMA, UPDATED_ITEMS_SCHEMA, UPDATED_USERS_SCHEMA
-from vgi_hackernews.walks import WALK_FUNCTIONS
+from vgi_hackernews.walks import RECENT_COMMENTERS_EXAMPLE, SUBMISSIONS_REPLIES_EXAMPLE, WALK_FUNCTIONS
 
 IMPLEMENTATION_VERSION = __version__
 DATA_VERSION_SPEC = f"=={__version__}"
@@ -190,6 +190,21 @@ _AGENT_TEST_TASKS = json.dumps(
             ),
         },
         {
+            "name": "early_commenters",
+            "prompt": (
+                "How many different people who commented in the discussion under Hacker News item 8863 "
+                "(Dropbox's launch post) already had their account before that post was submitted? "
+                "Answer with a single count."
+            ),
+        },
+        {
+            "name": "oldest_replier",
+            "prompt": (
+                "Among the people who replied directly to Hacker News item 8863 (top-level comments "
+                "only), whose account is the oldest? Give just the username."
+            ),
+        },
+        {
             "name": "account_age",
             "prompt": "In what year did the Hacker News user pg create their account?",
         },
@@ -319,6 +334,15 @@ _CATALOG_TAGS = {
     ),
 }
 
+#: The front page joined to the change feed on id: which ranked stories are
+#: being voted on or replied to this minute.
+_FRONT_PAGE_MOVERS_EXAMPLE = (
+    "Front-page stories the change feed lists as gaining votes or replies right now",
+    "SELECT t.rank, t.title, u.score, u.descendants AS comments "
+    "FROM hackernews.main.top_stories t JOIN hackernews.main.updated_items u USING (id) "
+    "ORDER BY t.rank",
+)
+
 _SCHEMA_EXAMPLES = examples(
     (
         "The front page right now, with each story's discussion size",
@@ -343,6 +367,9 @@ _SCHEMA_EXAMPLES = examples(
         "(SELECT rank, author FROM hackernews.main.top_stories WHERE rank <= 30) s, "
         "LATERAL hackernews.main.user(s.author, cache_ttl => 300) u ORDER BY s.rank",
     ),
+    _FRONT_PAGE_MOVERS_EXAMPLE,
+    RECENT_COMMENTERS_EXAMPLE,
+    SUBMISSIONS_REPLIES_EXAMPLE,
 )
 
 _SCHEMA_TAGS = {
@@ -651,6 +678,7 @@ _UPDATED_ITEMS_TABLE = Table(
                 "SELECT title, score, descendants AS comments FROM hackernews.main.updated_items "
                 "WHERE type = 'story' ORDER BY score DESC",
             ),
+            _FRONT_PAGE_MOVERS_EXAMPLE,
         ),
         extra={
             **_CLASSIFIERS,
@@ -751,7 +779,7 @@ _HACKERNEWS_CATALOG = Catalog(
     source_url=SOURCE_URL,
     schemas=[
         Schema(
-            path=("main",),
+            path=["main"],
             comment="Live, read-only Hacker News data from the public Firebase API — no credentials required",
             tags=_SCHEMA_TAGS,
             functions=list(_FUNCTIONS),

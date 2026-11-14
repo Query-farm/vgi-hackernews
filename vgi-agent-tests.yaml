@@ -83,6 +83,26 @@ tasks:
     ignore_column_names: true
     success_criteria: Searches the text of every comment in the thread for the word and counts the matches.
 
+  - name: early_commenters
+    reference_sql: >-
+      SELECT count(*) FROM (SELECT DISTINCT author FROM hackernews.main.comments(8863)
+      WHERE author IS NOT NULL) c, LATERAL hackernews.main.user(c.author) u
+      WHERE u.created_at < (SELECT created_at FROM hackernews.main.item(8863))
+    ignore_column_names: true
+    success_criteria: >-
+      Walks the whole thread (every depth), looks up each distinct commenter's profile, and
+      compares account creation with the post's own created_at (36 of 41 commenters).
+
+  - name: oldest_replier
+    reference_sql: >-
+      SELECT u.username FROM (SELECT DISTINCT author FROM hackernews.main.comments(8863, max_depth => 1)
+      WHERE author IS NOT NULL) c, LATERAL hackernews.main.user(c.author) u
+      ORDER BY u.created_at LIMIT 1
+    ignore_column_names: true
+    success_criteria: >-
+      Reads only the direct replies, looks up each replier's profile and picks the earliest
+      created_at (amichail).
+
   - name: account_age
     reference_sql: SELECT year(created_at) FROM hackernews.main.user('pg')
     ignore_column_names: true
