@@ -1,0 +1,1 @@
+{"by":"klaas-","descendants":9,"id":50453368,"kids":[50454287,50457232,50456155,50457020],"score":39,"time":1794404846,"title":"CVE-2026-119618 (critical): mod_HTTP2: heap corruption and RCE in assign_headers","type":"story","url":"https://httpd.apache.org/security/vulnerabilities_24.html"}

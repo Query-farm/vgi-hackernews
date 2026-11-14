@@ -350,3 +350,7 @@ Copyright 2026 Query Farm LLC - https://query.farm
 MIT — see [LICENSE](LICENSE). The worker is Query Farm's; the stories,
 comments and profiles it returns belong to their authors and are published by
 Y Combinator's Hacker News. See [NOTICE](NOTICE).
+
+## Executed notebook
+
+[Compare front-page rank with score in a recorded public snapshot](notebooks/README.md).
