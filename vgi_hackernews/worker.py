@@ -335,9 +335,10 @@ _CATALOG_TAGS = {
 }
 
 #: The front page joined to the change feed on id: which ranked stories are
-#: being voted on or replied to this minute.
+#: changing this minute (a vote, a reply or an edit — the feed does not say which).
 _FRONT_PAGE_MOVERS_EXAMPLE = (
-    "Front-page stories the change feed lists as gaining votes or replies right now",
+    "Front-page stories the change feed lists as active right now (new votes, replies or edits), "
+    "with their current score and comment count",
     "SELECT t.rank, t.title, u.score, u.descendants AS comments "
     "FROM hackernews.main.top_stories t JOIN hackernews.main.updated_items u USING (id) "
     "ORDER BY t.rank",
