@@ -1,0 +1,20 @@
+{
+  "release_revision": "831a83838db94f91cb3e064b6ea900ef753c10bb",
+  "current_revision": "2663bf316ea575062f4cb3faa106c159011fe835",
+  "source_sha256": {
+    "vgi_hackernews/__init__.py": "f7b04ca9a55a83d91ded7acc42f6637533097b10b7c2a8a817142ff4f496bb50",
+    "vgi_hackernews/hn_api.py": "a2ca217e7cf93bd52f031da6afb681355b726868b27d0d535ecc7e2b2e2fd8e1",
+    "vgi_hackernews/lists.py": "30ba7447203b9ff1ad057d603468b4da24effe389ef2cd306c6d6ebf0177af27",
+    "vgi_hackernews/lookups.py": "084350f06faaeeed28c5cd5c70d852f614e29feb666d615d0606da123d0eff3b",
+    "vgi_hackernews/meta.py": "eefd9dd130b0a8d795b0e21393c6eb8bec8f1d7fc6b4e75d1696c153fd712bee",
+    "vgi_hackernews/paging.py": "b607efa9bc1fc0269ddeb2d8b2c8e13eca6b86a0d729306b19aaadacc0ff94ab",
+    "vgi_hackernews/py.typed": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "vgi_hackernews/schemas.py": "86bb1eade05b885f7907e57453fccdee0fc9042be874e2ced25baf8fe4389e88",
+    "vgi_hackernews/walks.py": "921d8bf27c804d6653644fd975a97812288e4dac2916a6c80bba423462f6ae4f",
+    "vgi_hackernews/worker.py": "c3791d236d54f2a10f34db48b5fe1e41bef1d6f1628e8e7c4a212b371639abe7"
+  },
+  "reviewer": "Codex /root",
+  "reviewed_at": "2026-11-15T00:09:48.028999+00:00",
+  "registration": "Complete _FUNCTIONS union: four list functions, three lookups/scalars and three walks. Nine tables: six feed-specific names plus three same-name aliases. Deduplicated16 logical(schema,name) surfaces; no views/COPY/authenticated/write APIs. All uncovered functions and tables retained.",
+  "current_compatibility": "Current adds metadata examples/agent tasks and changes Schema.path tuple to equivalent list with same main component. No function signatures, handlers, item/schema normalization or runtime dependencies changed. Runtime evidence is exact released code, current interface compatibility only."
+}

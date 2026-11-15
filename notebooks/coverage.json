@@ -1,0 +1,332 @@
+{
+  "schema_version": 1,
+  "catalogs": {
+    "released": {
+      "path": "coverage/catalog-release.json",
+      "sha256": "0713f337bf4e2eedc5581ca36abe65036960dfda33d92ca3ac1f4e959f3bedea",
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root",
+        "reviewed_at": "2026-11-15T00:09:48.234134+00:00",
+        "catalog_sha256": "0713f337bf4e2eedc5581ca36abe65036960dfda33d92ca3ac1f4e959f3bedea",
+        "notes": "Full16 logical public(schema,name) surfaces:10 functions+9 tables with3same-name aliases. No views or COPY, auth or writes. Current changes metadata and equivalent schema path representation, with identical handlers/signatures/dependencies. Exact release runtime, current compatible evidence only."
+      }
+    },
+    "current": {
+      "path": "coverage/catalog-current.json",
+      "sha256": "4a9d010e8c2435d589823c9c1a486f8965239077062d739e720f15bd5d14d4c2",
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root",
+        "reviewed_at": "2026-11-15T00:09:48.234134+00:00",
+        "catalog_sha256": "4a9d010e8c2435d589823c9c1a486f8965239077062d739e720f15bd5d14d4c2",
+        "notes": "Full16 logical public(schema,name) surfaces:10 functions+9 tables with3same-name aliases. No views or COPY, auth or writes. Current changes metadata and equivalent schema path representation, with identical handlers/signatures/dependencies. Exact release runtime, current compatible evidence only."
+      }
+    }
+  },
+  "notebooks": [
+    {
+      "path": "01_rank_is_not_score_order.ipynb",
+      "sha256": "b28e95367bf94bcb789ca8ac32b2cb90ca4054cd8b33d0e5fcceec2a7f472aae",
+      "execution": {
+        "path": "coverage/run-01.json",
+        "sha256": "fb1074c320bd9dfc1a320413f930a6bbb88c82afa2c2b1128abc6e36b1fe8baf"
+      }
+    },
+    {
+      "path": "02_depth_changes_the_thread_you_count.ipynb",
+      "sha256": "00961e5595bdd66a479d28c302d24fa99352dc7778f5ce965fc9d1cbdd212210",
+      "execution": {
+        "path": "coverage/run-02.json",
+        "sha256": "e02453d24d72d8fb753d5dd54049d52704fd8bfd810111667696bf0802641b44"
+      }
+    },
+    {
+      "path": "03_an_id_window_is_not_a_time_window.ipynb",
+      "sha256": "4c9b5f939018f85d757450b336ffbd3bf1bac17a8494d0b7882f8aa44e844609",
+      "execution": {
+        "path": "coverage/run-03.json",
+        "sha256": "3fa754ce08ae37383134766a502b05e96e4c0d0ba6bc51320270d301f72ccf51"
+      }
+    }
+  ],
+  "examples": [
+    {
+      "object": {
+        "schema": "main",
+        "name": "top_stories"
+      },
+      "notebook": "01_rank_is_not_score_order.ipynb",
+      "sql": [
+        {
+          "cell": "c7b7bac1",
+          "reference": "hn.main.top_stories"
+        }
+      ],
+      "narrative_cells": [
+        "fdf45ccc"
+      ],
+      "result_cells": [
+        "491187cc",
+        "67b081ec"
+      ],
+      "interpretation_cells": [
+        "67b081ec"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root",
+        "reviewed_at": "2026-11-15T00:09:48.234134+00:00",
+        "notebook_sha256": "b28e95367bf94bcb789ca8ac32b2cb90ca4054cd8b33d0e5fcceec2a7f472aae",
+        "catalog_sha256": [
+          "0713f337bf4e2eedc5581ca36abe65036960dfda33d92ca3ac1f4e959f3bedea",
+          "4a9d010e8c2435d589823c9c1a486f8965239077062d739e720f15bd5d14d4c2"
+        ],
+        "purpose": "Measure rank/score disagreement among eligible stories in a bounded top-list prefix.",
+        "finding": "500 recorded items;30selected,29eligible. Among404 unequal-score pairs124disagree(30.7%). This does not identify the ranking algorithm or imply causation."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "stories"
+      },
+      "notebook": "01_rank_is_not_score_order.ipynb",
+      "sql": [
+        {
+          "cell": "access-query",
+          "reference": "hn.main.stories"
+        }
+      ],
+      "narrative_cells": [
+        "access-story"
+      ],
+      "result_cells": [
+        "access-finding"
+      ],
+      "interpretation_cells": [
+        "access-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root",
+        "reviewed_at": "2026-11-15T00:09:48.234134+00:00",
+        "notebook_sha256": "b28e95367bf94bcb789ca8ac32b2cb90ca4054cd8b33d0e5fcceec2a7f472aae",
+        "catalog_sha256": [
+          "0713f337bf4e2eedc5581ca36abe65036960dfda33d92ca3ac1f4e959f3bedea",
+          "4a9d010e8c2435d589823c9c1a486f8965239077062d739e720f15bd5d14d4c2"
+        ],
+        "purpose": "Compare parameterized feed selection with its direct table and retain rank/field identity.",
+        "finding": "Both access forms return500 rows; symmetric difference0forrecordedresponses. Two live reads may refresh; their clocks are not assumed identical."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "item"
+      },
+      "notebook": "02_depth_changes_the_thread_you_count.ipynb",
+      "sql": [
+        {
+          "cell": "materialize",
+          "reference": "hn.main.item"
+        }
+      ],
+      "narrative_cells": [
+        "retrieval-story"
+      ],
+      "result_cells": [
+        "root-finding"
+      ],
+      "interpretation_cells": [
+        "root-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root",
+        "reviewed_at": "2026-11-15T00:09:48.234134+00:00",
+        "notebook_sha256": "00961e5595bdd66a479d28c302d24fa99352dc7778f5ce965fc9d1cbdd212210",
+        "catalog_sha256": [
+          "0713f337bf4e2eedc5581ca36abe65036960dfda33d92ca3ac1f4e959f3bedea",
+          "4a9d010e8c2435d589823c9c1a486f8965239077062d739e720f15bd5d14d4c2"
+        ],
+        "purpose": "Resolve a fixed root and separate direct children from all live descendants.",
+        "finding": "Root8863 has33 direct childIDs and71providerlive descendants; neither is equated to a depth-limited count."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "user"
+      },
+      "notebook": "02_depth_changes_the_thread_you_count.ipynb",
+      "sql": [
+        {
+          "cell": "materialize",
+          "reference": "hn.main.user"
+        }
+      ],
+      "narrative_cells": [
+        "retrieval-story"
+      ],
+      "result_cells": [
+        "root-finding"
+      ],
+      "interpretation_cells": [
+        "root-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root",
+        "reviewed_at": "2026-11-15T00:09:48.234134+00:00",
+        "notebook_sha256": "00961e5595bdd66a479d28c302d24fa99352dc7778f5ce965fc9d1cbdd212210",
+        "catalog_sha256": [
+          "0713f337bf4e2eedc5581ca36abe65036960dfda33d92ca3ac1f4e959f3bedea",
+          "4a9d010e8c2435d589823c9c1a486f8965239077062d739e720f15bd5d14d4c2"
+        ],
+        "purpose": "Follow the root author into its actual public profile with LATERAL and check identity.",
+        "finding": "Returned username equals the root author. Current profile acquisition and historical root posting remain distinct clocks, without author-performance inference."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "comments"
+      },
+      "notebook": "02_depth_changes_the_thread_you_count.ipynb",
+      "sql": [
+        {
+          "cell": "materialize",
+          "reference": "hn.main.comments"
+        }
+      ],
+      "narrative_cells": [
+        "count-story"
+      ],
+      "result_cells": [
+        "depth-finding",
+        "depth-chart"
+      ],
+      "interpretation_cells": [
+        "depth-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root",
+        "reviewed_at": "2026-11-15T00:09:48.234134+00:00",
+        "notebook_sha256": "00961e5595bdd66a479d28c302d24fa99352dc7778f5ce965fc9d1cbdd212210",
+        "catalog_sha256": [
+          "0713f337bf4e2eedc5581ca36abe65036960dfda33d92ca3ac1f4e959f3bedea",
+          "4a9d010e8c2435d589823c9c1a486f8965239077062d739e720f15bd5d14d4c2"
+        ],
+        "purpose": "Count returned replies at a bounded worker traversal depth and preserve path/parent/missing-body semantics.",
+        "finding": "Depth1returns33rows including1missingbody and33/33direct childIDs. Experiment depth2adds18 replies while original direct rows remain identical."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "html_to_text"
+      },
+      "notebook": "02_depth_changes_the_thread_you_count.ipynb",
+      "sql": [
+        {
+          "cell": "materialize",
+          "reference": "hn.main.html_to_text"
+        }
+      ],
+      "narrative_cells": [
+        "text-story"
+      ],
+      "result_cells": [
+        "text-finding",
+        "text-chart"
+      ],
+      "interpretation_cells": [
+        "text-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root",
+        "reviewed_at": "2026-11-15T00:09:48.234134+00:00",
+        "notebook_sha256": "00961e5595bdd66a479d28c302d24fa99352dc7778f5ce965fc9d1cbdd212210",
+        "catalog_sha256": [
+          "0713f337bf4e2eedc5581ca36abe65036960dfda33d92ca3ac1f4e959f3bedea",
+          "4a9d010e8c2435d589823c9c1a486f8965239077062d739e720f15bd5d14d4c2"
+        ],
+        "purpose": "Compare raw/decoded character counts on the same non-null comment bodies.",
+        "finding": "18of32nonnull bodies change length at depth1; missingbody remainsNULL. Signed difference plot shows representation, not sentiment or comment quality."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "max_item"
+      },
+      "notebook": "03_an_id_window_is_not_a_time_window.ipynb",
+      "sql": [
+        {
+          "cell": "materialize",
+          "reference": "hn.main.max_item"
+        }
+      ],
+      "narrative_cells": [
+        "retrieval-story"
+      ],
+      "result_cells": [
+        "anchor-finding"
+      ],
+      "interpretation_cells": [
+        "anchor-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root",
+        "reviewed_at": "2026-11-15T00:09:48.234134+00:00",
+        "notebook_sha256": "4c9b5f939018f85d757450b336ffbd3bf1bac17a8494d0b7882f8aa44e844609",
+        "catalog_sha256": [
+          "0713f337bf4e2eedc5581ca36abe65036960dfda33d92ca3ac1f4e959f3bedea",
+          "4a9d010e8c2435d589823c9c1a486f8965239077062d739e720f15bd5d14d4c2"
+        ],
+        "purpose": "Read a maximumID anchor and compare it with the largest returned ID from a separately anchored recent scan.",
+        "finding": "Both recorded anchors50502385 agree. Notebook documents inferred anchor limitation and does not assume atomic live acquisitions."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "recent_items"
+      },
+      "notebook": "03_an_id_window_is_not_a_time_window.ipynb",
+      "sql": [
+        {
+          "cell": "materialize",
+          "reference": "hn.main.recent_items"
+        }
+      ],
+      "narrative_cells": [
+        "population-story"
+      ],
+      "result_cells": [
+        "mix-finding",
+        "mix-chart",
+        "timeline-chart"
+      ],
+      "interpretation_cells": [
+        "mix-finding"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root",
+        "reviewed_at": "2026-11-15T00:09:48.234134+00:00",
+        "notebook_sha256": "4c9b5f939018f85d757450b336ffbd3bf1bac17a8494d0b7882f8aa44e844609",
+        "catalog_sha256": [
+          "0713f337bf4e2eedc5581ca36abe65036960dfda33d92ca3ac1f4e959f3bedea",
+          "4a9d010e8c2435d589823c9c1a486f8965239077062d739e720f15bd5d14d4c2"
+        ],
+        "purpose": "Select an explicit25-ID prefix from a materialized100-ID scan; retain unknown IDs/type/time in the denominator.",
+        "finding": "25selected IDs all returned/timed,24comments1story spanning4.58minutes. Widening the same recorded prefix changes population and observedspan, not a general arrival-rate estimate."
+      }
+    }
+  ]
+}

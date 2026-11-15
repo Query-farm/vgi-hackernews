@@ -1,0 +1,226 @@
+{
+  "schema_version": 1,
+  "repository": "Query-farm/vgi-hackernews",
+  "revision": "831a83838db94f91cb3e064b6ea900ef753c10bb",
+  "captured_at": "2026-11-15T00:09:48.028999+00:00",
+  "default_schema": "main",
+  "scope": "all_public_functions_and_tables",
+  "complete": true,
+  "objects": [
+    {
+      "schema": "main",
+      "name": "comments",
+      "kind": "function",
+      "signatures": [
+        "table(BIGINT, BIGINT) -> None"
+      ],
+      "access": "read",
+      "authentication": "none"
+    },
+    {
+      "schema": "main",
+      "name": "html_to_text",
+      "kind": "function",
+      "signatures": [
+        "scalar(VARCHAR) -> VARCHAR"
+      ],
+      "access": "read",
+      "authentication": "none"
+    },
+    {
+      "schema": "main",
+      "name": "item",
+      "kind": "function",
+      "signatures": [
+        "table(BIGINT, BIGINT) -> None"
+      ],
+      "access": "read",
+      "authentication": "none"
+    },
+    {
+      "schema": "main",
+      "name": "max_item",
+      "kind": "function",
+      "signatures": [
+        "table() -> None",
+        "TABLE alias"
+      ],
+      "access": "read",
+      "authentication": "none"
+    },
+    {
+      "schema": "main",
+      "name": "recent_items",
+      "kind": "function",
+      "signatures": [
+        "table(BIGINT) -> None"
+      ],
+      "access": "read",
+      "authentication": "none"
+    },
+    {
+      "schema": "main",
+      "name": "stories",
+      "kind": "function",
+      "signatures": [
+        "table(VARCHAR) -> None"
+      ],
+      "access": "read",
+      "authentication": "none"
+    },
+    {
+      "schema": "main",
+      "name": "submissions",
+      "kind": "function",
+      "signatures": [
+        "table(VARCHAR) -> None"
+      ],
+      "access": "read",
+      "authentication": "none"
+    },
+    {
+      "schema": "main",
+      "name": "updated_items",
+      "kind": "function",
+      "signatures": [
+        "table() -> None",
+        "TABLE alias"
+      ],
+      "access": "read",
+      "authentication": "none"
+    },
+    {
+      "schema": "main",
+      "name": "updated_users",
+      "kind": "function",
+      "signatures": [
+        "table() -> None",
+        "TABLE alias"
+      ],
+      "access": "read",
+      "authentication": "none"
+    },
+    {
+      "schema": "main",
+      "name": "user",
+      "kind": "function",
+      "signatures": [
+        "table(VARCHAR, BIGINT) -> None"
+      ],
+      "access": "read",
+      "authentication": "none"
+    },
+    {
+      "schema": "main",
+      "name": "job_stories",
+      "kind": "table",
+      "signatures": [
+        "TABLE"
+      ],
+      "access": "read",
+      "authentication": "none"
+    },
+    {
+      "schema": "main",
+      "name": "show_stories",
+      "kind": "table",
+      "signatures": [
+        "TABLE"
+      ],
+      "access": "read",
+      "authentication": "none"
+    },
+    {
+      "schema": "main",
+      "name": "top_stories",
+      "kind": "table",
+      "signatures": [
+        "TABLE"
+      ],
+      "access": "read",
+      "authentication": "none"
+    },
+    {
+      "schema": "main",
+      "name": "ask_stories",
+      "kind": "table",
+      "signatures": [
+        "TABLE"
+      ],
+      "access": "read",
+      "authentication": "none"
+    },
+    {
+      "schema": "main",
+      "name": "best_stories",
+      "kind": "table",
+      "signatures": [
+        "TABLE"
+      ],
+      "access": "read",
+      "authentication": "none"
+    },
+    {
+      "schema": "main",
+      "name": "new_stories",
+      "kind": "table",
+      "signatures": [
+        "TABLE"
+      ],
+      "access": "read",
+      "authentication": "none"
+    },
+    {
+      "schema": "main",
+      "name": "updated_users",
+      "kind": "table",
+      "signatures": [
+        "TABLE alias"
+      ],
+      "access": "read",
+      "authentication": "none"
+    },
+    {
+      "schema": "main",
+      "name": "max_item",
+      "kind": "table",
+      "signatures": [
+        "TABLE alias"
+      ],
+      "access": "read",
+      "authentication": "none"
+    },
+    {
+      "schema": "main",
+      "name": "updated_items",
+      "kind": "table",
+      "signatures": [
+        "TABLE alias"
+      ],
+      "access": "read",
+      "authentication": "none"
+    }
+  ],
+  "evidence": [
+    {
+      "path": "coverage/functions.json",
+      "sha256": "85ee636ab29a572e8096f6dbd8d1c11fde95bd5931f1cca17377ec67dae18615",
+      "description": "Actual public v0.3.0 uvx Git-tag release attached; complete native export"
+    },
+    {
+      "path": "coverage/tables.json",
+      "sha256": "31b84f84aced98b8088b80734c14979058a0d79b715587097539835ae943e250",
+      "description": "Actual public v0.3.0 uvx Git-tag release attached; complete native export"
+    },
+    {
+      "path": "coverage/views.json",
+      "sha256": "83889ceb6995564ba8f589c8ef664da303be830fbc67344168677d390f82caed",
+      "description": "Actual public v0.3.0 uvx Git-tag release attached; complete native export"
+    },
+    {
+      "path": "coverage/catalog-metadata.json",
+      "sha256": "3bf851c8360daed5d709b5f7fe16e27abb8e4028eb276dfd020df4586ef92c5a",
+      "description": "Actual public v0.3.0 uvx Git-tag release attached; complete native export"
+    }
+  ]
+}

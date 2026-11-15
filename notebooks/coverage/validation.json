@@ -1,0 +1,994 @@
+{
+  "schema_version": 1,
+  "status": "met",
+  "meets_target": true,
+  "catalogs": {
+    "released": {
+      "catalog_status": "verified",
+      "revision": "831a83838db94f91cb3e064b6ea900ef753c10bb",
+      "catalog_sha256": "0713f337bf4e2eedc5581ca36abe65036960dfda33d92ca3ac1f4e959f3bedea",
+      "collection_reconciled": true,
+      "denominator": 16,
+      "observed_objects": 16,
+      "required": 8,
+      "verified_count": 8,
+      "candidate_count": 0,
+      "fraction": 0.5,
+      "meets_target": true,
+      "exact_runtime_count": 8,
+      "runtime_revisions": [
+        "831a83838db94f91cb3e064b6ea900ef753c10bb"
+      ],
+      "covered": [
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "comments"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "html_to_text"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "item"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "max_item"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "recent_items"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "stories"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "top_stories"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "user"
+        }
+      ],
+      "uncovered": [
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "ask_stories"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "best_stories"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "job_stories"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "new_stories"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "show_stories"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "submissions"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "updated_items"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "updated_users"
+        }
+      ],
+      "objects": [
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "ask_stories",
+          "kinds": [
+            "table"
+          ],
+          "signatures": [
+            "TABLE"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "best_stories",
+          "kinds": [
+            "table"
+          ],
+          "signatures": [
+            "TABLE"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "comments",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "table(BIGINT, BIGINT) -> None"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "html_to_text",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "scalar(VARCHAR) -> VARCHAR"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "item",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "table(BIGINT, BIGINT) -> None"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "job_stories",
+          "kinds": [
+            "table"
+          ],
+          "signatures": [
+            "TABLE"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "max_item",
+          "kinds": [
+            "function",
+            "table"
+          ],
+          "signatures": [
+            "TABLE alias",
+            "table() -> None"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "new_stories",
+          "kinds": [
+            "table"
+          ],
+          "signatures": [
+            "TABLE"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "recent_items",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "table(BIGINT) -> None"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "show_stories",
+          "kinds": [
+            "table"
+          ],
+          "signatures": [
+            "TABLE"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "stories",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "table(VARCHAR) -> None"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "submissions",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "table(VARCHAR) -> None"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "top_stories",
+          "kinds": [
+            "table"
+          ],
+          "signatures": [
+            "TABLE"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "updated_items",
+          "kinds": [
+            "function",
+            "table"
+          ],
+          "signatures": [
+            "TABLE alias",
+            "table() -> None"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "updated_users",
+          "kinds": [
+            "function",
+            "table"
+          ],
+          "signatures": [
+            "TABLE alias",
+            "table() -> None"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "user",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "table(VARCHAR, BIGINT) -> None"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        }
+      ],
+      "issues": []
+    },
+    "current": {
+      "catalog_status": "verified",
+      "revision": "2663bf316ea575062f4cb3faa106c159011fe835",
+      "catalog_sha256": "4a9d010e8c2435d589823c9c1a486f8965239077062d739e720f15bd5d14d4c2",
+      "collection_reconciled": false,
+      "denominator": 16,
+      "observed_objects": 16,
+      "required": 8,
+      "verified_count": 8,
+      "candidate_count": 0,
+      "fraction": 0.5,
+      "meets_target": true,
+      "exact_runtime_count": 0,
+      "runtime_revisions": [
+        "831a83838db94f91cb3e064b6ea900ef753c10bb"
+      ],
+      "covered": [
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "comments"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "html_to_text"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "item"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "max_item"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "recent_items"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "stories"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "top_stories"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "user"
+        }
+      ],
+      "uncovered": [
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "ask_stories"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "best_stories"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "job_stories"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "new_stories"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "show_stories"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "submissions"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "updated_items"
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "updated_users"
+        }
+      ],
+      "objects": [
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "ask_stories",
+          "kinds": [
+            "table"
+          ],
+          "signatures": [
+            "TABLE"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "best_stories",
+          "kinds": [
+            "table"
+          ],
+          "signatures": [
+            "TABLE"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "comments",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "table(BIGINT, BIGINT) -> None"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "html_to_text",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "scalar(VARCHAR) -> VARCHAR"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "item",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "table(BIGINT, BIGINT) -> None"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "job_stories",
+          "kinds": [
+            "table"
+          ],
+          "signatures": [
+            "TABLE"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "max_item",
+          "kinds": [
+            "function",
+            "table"
+          ],
+          "signatures": [
+            "TABLE alias",
+            "table() -> None"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "new_stories",
+          "kinds": [
+            "table"
+          ],
+          "signatures": [
+            "TABLE"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "recent_items",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "table(BIGINT) -> None"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "show_stories",
+          "kinds": [
+            "table"
+          ],
+          "signatures": [
+            "TABLE"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "stories",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "table(VARCHAR) -> None"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "submissions",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "table(VARCHAR) -> None"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "top_stories",
+          "kinds": [
+            "table"
+          ],
+          "signatures": [
+            "TABLE"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "updated_items",
+          "kinds": [
+            "function",
+            "table"
+          ],
+          "signatures": [
+            "TABLE alias",
+            "table() -> None"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "updated_users",
+          "kinds": [
+            "function",
+            "table"
+          ],
+          "signatures": [
+            "TABLE alias",
+            "table() -> None"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        },
+        {
+          "schema": [
+            "main"
+          ],
+          "name": "user",
+          "kinds": [
+            "function"
+          ],
+          "signatures": [
+            "table(VARCHAR, BIGINT) -> None"
+          ],
+          "access": [
+            "read"
+          ],
+          "authentication": [
+            "none"
+          ]
+        }
+      ],
+      "issues": []
+    }
+  },
+  "interface_drift": {
+    "known": true,
+    "current_only": [],
+    "released_only": [],
+    "changed": []
+  },
+  "notebooks": {
+    "01_rank_is_not_score_order.ipynb": {
+      "verified": true,
+      "issues": []
+    },
+    "02_depth_changes_the_thread_you_count.ipynb": {
+      "verified": true,
+      "issues": []
+    },
+    "03_an_id_window_is_not_a_time_window.ipynb": {
+      "verified": true,
+      "issues": []
+    }
+  },
+  "examples": [
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "top_stories"
+      },
+      "notebook": "01_rank_is_not_score_order.ipynb",
+      "runtime_revision": "831a83838db94f91cb3e064b6ea900ef753c10bb",
+      "runtime_catalog_sha256": "0713f337bf4e2eedc5581ca36abe65036960dfda33d92ca3ac1f4e959f3bedea"
+    },
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "stories"
+      },
+      "notebook": "01_rank_is_not_score_order.ipynb",
+      "runtime_revision": "831a83838db94f91cb3e064b6ea900ef753c10bb",
+      "runtime_catalog_sha256": "0713f337bf4e2eedc5581ca36abe65036960dfda33d92ca3ac1f4e959f3bedea"
+    },
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "item"
+      },
+      "notebook": "02_depth_changes_the_thread_you_count.ipynb",
+      "runtime_revision": "831a83838db94f91cb3e064b6ea900ef753c10bb",
+      "runtime_catalog_sha256": "0713f337bf4e2eedc5581ca36abe65036960dfda33d92ca3ac1f4e959f3bedea"
+    },
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "user"
+      },
+      "notebook": "02_depth_changes_the_thread_you_count.ipynb",
+      "runtime_revision": "831a83838db94f91cb3e064b6ea900ef753c10bb",
+      "runtime_catalog_sha256": "0713f337bf4e2eedc5581ca36abe65036960dfda33d92ca3ac1f4e959f3bedea"
+    },
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "comments"
+      },
+      "notebook": "02_depth_changes_the_thread_you_count.ipynb",
+      "runtime_revision": "831a83838db94f91cb3e064b6ea900ef753c10bb",
+      "runtime_catalog_sha256": "0713f337bf4e2eedc5581ca36abe65036960dfda33d92ca3ac1f4e959f3bedea"
+    },
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "html_to_text"
+      },
+      "notebook": "02_depth_changes_the_thread_you_count.ipynb",
+      "runtime_revision": "831a83838db94f91cb3e064b6ea900ef753c10bb",
+      "runtime_catalog_sha256": "0713f337bf4e2eedc5581ca36abe65036960dfda33d92ca3ac1f4e959f3bedea"
+    },
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "max_item"
+      },
+      "notebook": "03_an_id_window_is_not_a_time_window.ipynb",
+      "runtime_revision": "831a83838db94f91cb3e064b6ea900ef753c10bb",
+      "runtime_catalog_sha256": "0713f337bf4e2eedc5581ca36abe65036960dfda33d92ca3ac1f4e959f3bedea"
+    },
+    {
+      "status": "verified",
+      "issues": [],
+      "verified_catalogs": [
+        "released",
+        "current"
+      ],
+      "object": {
+        "schema": [
+          "main"
+        ],
+        "name": "recent_items"
+      },
+      "notebook": "03_an_id_window_is_not_a_time_window.ipynb",
+      "runtime_revision": "831a83838db94f91cb3e064b6ea900ef753c10bb",
+      "runtime_catalog_sha256": "0713f337bf4e2eedc5581ca36abe65036960dfda33d92ca3ac1f4e959f3bedea"
+    }
+  ],
+  "issues": []
+}

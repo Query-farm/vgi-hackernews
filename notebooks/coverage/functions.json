@@ -1,0 +1,391 @@
+{
+  "query": "SELECT * FROM duckdb_functions() WHERE database_name='hn' ORDER BY schema_name,function_name",
+  "columns": [
+    "database_name",
+    "database_oid",
+    "schema_name",
+    "function_name",
+    "alias_of",
+    "function_type",
+    "description",
+    "comment",
+    "tags",
+    "return_type",
+    "parameters",
+    "parameter_types",
+    "varargs",
+    "macro_definition",
+    "has_side_effects",
+    "internal",
+    "extension_name",
+    "function_oid",
+    "examples",
+    "stability",
+    "categories"
+  ],
+  "rows": [
+    [
+      "hn",
+      "22595",
+      "main",
+      "comments",
+      null,
+      "table",
+      "The whole discussion under a Hacker News story or comment, one row per reply",
+      null,
+      {
+        "vgi.category": "items",
+        "vgi.doc_llm": "The complete comment tree under a story (or under any comment), flattened to one row per reply with its depth and its position in the thread. This is the answer to 'what are people saying about X': the API itself only returns each item's direct reply ids, and this walks all of them. Order by `path` to read the thread as the site shows it. The id can come from a subquery or, under LATERAL, from another table's column, so finding the story and reading its thread is one query.",
+        "vgi.doc_md": "Walks the reply tree under an item and returns every descendant \u2014 the item itself is not included.\n\n### Reading the thread in order\n\n`path` is the comment's position among its siblings at each level, so sorting by it reproduces the site's nesting exactly: `[1]`, then `[1, 1]` (the first reply to the first comment), then `[1, 1, 1]`, then `[1, 2]`, then `[2]`. `depth` is the length of the path.\n\n### Deleted and dead comments\n\nThey are kept, flagged by `deleted` and `dead`, because replies hang beneath them. Filter them out when counting what was said; keep them when rebuilding the tree. A story's `descendants` counts only live comments, so it matches the row count here once both flags are filtered out.\n\n### Cost\n\nOne request per comment, fetched a level at a time with 32 in flight; a thread of a thousand comments takes a few seconds. The whole tree is walked before any row is returned, so a `LIMIT` does not make it cheaper \u2014 `max_depth` does: `max_depth => 1` fetches only the direct replies.\n\n### Many threads at once\n\nUnder `LATERAL`, every story in an input batch is walked together, so the threads of ten stories cost little more wall-clock time than the largest of them. Keep the driving side small \u2014 the front page's top ten, not all 500 \u2014 since every comment under every story is a request.",
+        "vgi.example_queries": "[{\"description\": \"The Dropbox launch thread, read top to bottom\", \"sql\": \"SELECT depth, author, hackernews.main.html_to_text(text) AS comment FROM hackernews.main.comments(8863) WHERE NOT deleted AND NOT dead ORDER BY path\"}, {\"description\": \"Who talked most in the discussion of the current top story\", \"sql\": \"SELECT author, count(*) AS comments FROM hackernews.main.comments((SELECT id FROM hackernews.main.top_stories WHERE rank = 1)) WHERE author IS NOT NULL GROUP BY author ORDER BY comments DESC, author LIMIT 10\"}, {\"description\": \"How many direct replies each of the top five stories has drawn\", \"sql\": \"SELECT s.rank, s.title, count(c.id) AS replies FROM (SELECT rank, id, title FROM hackernews.main.top_stories WHERE rank <= 5) s, LATERAL hackernews.main.comments(s.id, max_depth => 1) c GROUP BY s.rank, s.title ORDER BY s.rank\"}]",
+        "vgi.result_columns_schema": "[{\"name\": \"root_id\", \"type\": \"BIGINT\", \"description\": \"Id of the item whose thread this comment belongs to: the id comments() was called with.\"}, {\"name\": \"depth\", \"type\": \"INTEGER\", \"description\": \"Levels below the root item: 1 is a direct reply, 2 a reply to a reply, and so on.\"}, {\"name\": \"path\", \"type\": \"INTEGER[]\", \"description\": \"The comment's 1-based position among its siblings at each level from the root down, so sorting by path lists the thread exactly as Hacker News displays it.\"}, {\"name\": \"id\", \"type\": \"BIGINT\", \"description\": \"Unique item id, assigned in increasing order across every kind of item; the key item() and comments() take, and the value kids, parent, poll and parts refer to.\"}, {\"name\": \"type\", \"type\": \"VARCHAR\", \"description\": \"What the item is: 'story', 'comment', 'job', 'poll' or 'pollopt' (one option of a poll). Ask HN and Show HN posts are stories.\"}, {\"name\": \"author\", \"type\": \"VARCHAR\", \"description\": \"Username of whoever posted it (the API's `by` field); the key user() takes. NULL on deleted items.\"}, {\"name\": \"created_at\", \"type\": \"TIMESTAMP WITH TIME ZONE\", \"description\": \"When the item was posted, as a UTC instant (the API's `time`, in Unix seconds).\"}, {\"name\": \"title\", \"type\": \"VARCHAR\", \"description\": \"Headline of a story, poll or job, as plain text. NULL for comments and poll options.\"}, {\"name\": \"url\", \"type\": \"VARCHAR\", \"description\": \"Address a link story points to. NULL for text posts such as Ask HN, and for comments.\"}, {\"name\": \"text\", \"type\": \"VARCHAR\", \"description\": \"Body of a comment, text post, job or poll option, as HTML: entity-escaped, with <p> paragraph breaks and <a> links. html_to_text() turns it into plain text. NULL when the item has no body.\"}, {\"name\": \"score\", \"type\": \"BIGINT\", \"description\": \"Points (net upvotes) on a story, poll or job, or the number of votes cast for a poll option. NULL for comments, whose scores Hacker News does not publish.\"}, {\"name\": \"descendants\", \"type\": \"BIGINT\", \"description\": \"Number of live comments in the whole thread under a story or poll, at every depth (deleted and dead comments are not counted). NULL for other item types.\"}, {\"name\": \"parent\", \"type\": \"BIGINT\", \"description\": \"Id of the item a comment replies to (another comment, or the story at the top of the thread). NULL for anything that is not a comment.\"}, {\"name\": \"poll\", \"type\": \"BIGINT\", \"description\": \"For a poll option, the item id of the poll (its parent). NULL otherwise.\"}, {\"name\": \"kids\", \"type\": \"BIGINT[]\", \"description\": \"Ids of the direct replies, in the ranked order Hacker News displays them. Empty when there are none.\"}, {\"name\": \"parts\", \"type\": \"BIGINT[]\", \"description\": \"For a poll, the ids of its options in display order. NULL for other item types.\"}, {\"name\": \"deleted\", \"type\": \"BOOLEAN\", \"description\": \"Whether the item was deleted. A deleted item keeps its id, type and place in its thread but loses its author and body. Never NULL.\"}, {\"name\": \"dead\", \"type\": \"BOOLEAN\", \"description\": \"Whether the item is dead: killed by moderators or flags, and hidden from readers who have not opted in to seeing it. Never NULL.\"}]"
+      },
+      null,
+      [
+        "id",
+        "max_depth"
+      ],
+      [
+        "BIGINT",
+        "BIGINT"
+      ],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22600,
+      [
+        "SELECT depth, author, hackernews.main.html_to_text(text) AS comment FROM hackernews.main.comments(8863) WHERE NOT deleted AND NOT dead ORDER BY path"
+      ],
+      null,
+      [
+        "items"
+      ]
+    ],
+    [
+      "hn",
+      "22595",
+      "main",
+      "html_to_text",
+      null,
+      "scalar",
+      "Turn Hacker News' HTML (comment bodies, text posts, profiles) into plain text",
+      null,
+      {
+        "vgi.category": "items",
+        "vgi.doc_llm": "Converts the HTML Hacker News stores in `text` and `about` into plain text you can search, count words in, or show a reader. Use it before any `LIKE`, `regexp_matches` or full-text work on comment bodies \u2014 in the raw column an apostrophe is `&#x27;` and a slash is `&#x2F;`, so a plain-text pattern silently misses.",
+        "vgi.doc_md": "Decodes entities, turns `<p>` into blank lines, replaces each link with its full address, and drops the remaining tags.\n\n### Why the raw column needs this\n\nEvery special character in a comment is entity-escaped, so the word *don't* is stored as `don&#x27;t` and a URL's slashes as `&#x2F;`. Searching the raw column for either finds nothing, without an error to say why.\n\n### Links\n\nThe site shortens long URLs in the visible link text but keeps the whole address in the link itself, so the full address is what this returns.",
+        "vgi.example_queries": "[{\"description\": \"Decode a snippet of comment HTML\", \"sql\": \"SELECT hackernews.main.html_to_text('Don&#x27;t <i>panic</i> &amp; carry on') AS plain\"}, {\"description\": \"Search comment text on a thread without tripping over HTML entities\", \"sql\": \"SELECT id, author FROM hackernews.main.comments(8863) WHERE hackernews.main.html_to_text(text) ILIKE '%don''t%' ORDER BY path\"}]"
+      },
+      "VARCHAR",
+      [
+        "value"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22599,
+      [
+        "SELECT hackernews.main.html_to_text('Don&#x27;t <i>panic</i> &amp; carry on') AS plain"
+      ],
+      "CONSISTENT",
+      [
+        "items"
+      ]
+    ],
+    [
+      "hn",
+      "22595",
+      "main",
+      "item",
+      null,
+      "table",
+      "Look up any Hacker News story, comment, job or poll by its numeric id",
+      null,
+      {
+        "vgi.category": "items",
+        "vgi.doc_llm": "Any Hacker News item \u2014 story, comment, job, poll or poll option \u2014 by its numeric id. This is the building block for following the site's links: a story's `kids` are the ids of its top-level comments, a comment's `parent` points back up, and a poll's `parts` are its options, and each of them is one `item()` call. It composes under a correlated LATERAL, so a whole list of ids is looked up in one query. An id with no item behind it returns no row rather than an error.",
+        "vgi.doc_md": "One row per id, in the same shape every other item-returning object uses.\n\n### Following links\n\nThe API stores relationships as bare ids, so moving through the site is a chain of lookups. Unnest a list of ids and join this function to it with `LATERAL`, and the ids in each input batch are fetched concurrently rather than one by one. For a whole comment tree at every depth, `comments()` does the walking for you.\n\n### Missing and deleted items\n\nAn id that was never assigned yields no row. A deleted item still yields its row, with `deleted` set and `author` and `text` gone, because its replies may still be there.\n\n### Caching\n\nHacker News marks every response uncacheable, so each call refetches. Pass `cache_ttl => N` to cache each item for N seconds, which also turns on per-value memoization for a `LATERAL` that looks the same id up repeatedly.",
+        "vgi.example_queries": "[{\"description\": \"The Dropbox launch post, from 2007\", \"sql\": \"SELECT title, author, created_at, url FROM hackernews.main.item(8863)\"}, {\"description\": \"The top-level comments on the current number one story, in display order\", \"sql\": \"SELECT k.position, c.author, hackernews.main.html_to_text(c.text) AS comment FROM (SELECT unnest(kids) AS kid, generate_subscripts(kids, 1) AS position FROM hackernews.main.top_stories WHERE rank = 1) k, LATERAL hackernews.main.item(k.kid) c ORDER BY k.position\"}, {\"description\": \"How a poll's votes split across its options\", \"sql\": \"SELECT o.text AS option, o.score AS votes FROM (SELECT unnest(parts) AS part FROM hackernews.main.item(126809)) p, LATERAL hackernews.main.item(p.part) o ORDER BY votes DESC\"}]",
+        "vgi.result_columns_schema": "[{\"name\": \"id\", \"type\": \"BIGINT\", \"description\": \"Unique item id, assigned in increasing order across every kind of item; the key item() and comments() take, and the value kids, parent, poll and parts refer to.\"}, {\"name\": \"type\", \"type\": \"VARCHAR\", \"description\": \"What the item is: 'story', 'comment', 'job', 'poll' or 'pollopt' (one option of a poll). Ask HN and Show HN posts are stories.\"}, {\"name\": \"author\", \"type\": \"VARCHAR\", \"description\": \"Username of whoever posted it (the API's `by` field); the key user() takes. NULL on deleted items.\"}, {\"name\": \"created_at\", \"type\": \"TIMESTAMP WITH TIME ZONE\", \"description\": \"When the item was posted, as a UTC instant (the API's `time`, in Unix seconds).\"}, {\"name\": \"title\", \"type\": \"VARCHAR\", \"description\": \"Headline of a story, poll or job, as plain text. NULL for comments and poll options.\"}, {\"name\": \"url\", \"type\": \"VARCHAR\", \"description\": \"Address a link story points to. NULL for text posts such as Ask HN, and for comments.\"}, {\"name\": \"text\", \"type\": \"VARCHAR\", \"description\": \"Body of a comment, text post, job or poll option, as HTML: entity-escaped, with <p> paragraph breaks and <a> links. html_to_text() turns it into plain text. NULL when the item has no body.\"}, {\"name\": \"score\", \"type\": \"BIGINT\", \"description\": \"Points (net upvotes) on a story, poll or job, or the number of votes cast for a poll option. NULL for comments, whose scores Hacker News does not publish.\"}, {\"name\": \"descendants\", \"type\": \"BIGINT\", \"description\": \"Number of live comments in the whole thread under a story or poll, at every depth (deleted and dead comments are not counted). NULL for other item types.\"}, {\"name\": \"parent\", \"type\": \"BIGINT\", \"description\": \"Id of the item a comment replies to (another comment, or the story at the top of the thread). NULL for anything that is not a comment.\"}, {\"name\": \"poll\", \"type\": \"BIGINT\", \"description\": \"For a poll option, the item id of the poll (its parent). NULL otherwise.\"}, {\"name\": \"kids\", \"type\": \"BIGINT[]\", \"description\": \"Ids of the direct replies, in the ranked order Hacker News displays them. Empty when there are none.\"}, {\"name\": \"parts\", \"type\": \"BIGINT[]\", \"description\": \"For a poll, the ids of its options in display order. NULL for other item types.\"}, {\"name\": \"deleted\", \"type\": \"BOOLEAN\", \"description\": \"Whether the item was deleted. A deleted item keeps its id, type and place in its thread but loses its author and body. Never NULL.\"}, {\"name\": \"dead\", \"type\": \"BOOLEAN\", \"description\": \"Whether the item is dead: killed by moderators or flags, and hidden from readers who have not opted in to seeing it. Never NULL.\"}]"
+      },
+      null,
+      [
+        "id",
+        "cache_ttl"
+      ],
+      [
+        "BIGINT",
+        "BIGINT"
+      ],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22601,
+      [
+        "SELECT title, author, created_at, url FROM hackernews.main.item(8863)"
+      ],
+      null,
+      [
+        "items"
+      ]
+    ],
+    [
+      "hn",
+      "22595",
+      "main",
+      "max_item",
+      null,
+      "table",
+      "Scan function behind the max_item table: the largest item id assigned so far",
+      null,
+      {
+        "vgi.category": "items",
+        "vgi.doc_llm": "The id of the newest item on Hacker News, as one row. Prefer the `max_item` table, which scans this. Ids are assigned in sequence to every story and comment alike, so this is where a backwards walk through the site starts, and subtracting two readings counts what was posted in between.",
+        "vgi.doc_md": "One row, one column: the newest item id.\n\n### Prefer the table\n\nThe `max_item` table is backed by this function and returns the same row.\n\n### Using it\n\n`recent_items()` already starts from here, so reach for this directly only when the number itself is the answer, or to bound a range of ids by hand.",
+        "vgi.example_queries": "[{\"description\": \"How many items have ever been posted\", \"sql\": \"SELECT id AS items_posted FROM hackernews.main.max_item()\"}]",
+        "vgi.result_columns_schema": "[{\"name\": \"id\", \"type\": \"BIGINT\", \"description\": \"Largest item id assigned so far, so the id of the newest item on the site. Ids are handed out in sequence, which also makes it a running count of everything posted.\"}]"
+      },
+      null,
+      [],
+      [],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22602,
+      [
+        "SELECT id AS items_posted FROM hackernews.main.max_item()"
+      ],
+      null,
+      [
+        "items"
+      ]
+    ],
+    [
+      "hn",
+      "22595",
+      "main",
+      "recent_items",
+      null,
+      "table",
+      "The latest items posted anywhere on Hacker News, comments and stories alike",
+      null,
+      {
+        "vgi.category": "items",
+        "vgi.doc_llm": "Everything posted to Hacker News most recently, across the whole site: the newest comments and stories, newest first. The argument is how many item ids to walk back through from the newest one. Reach for it for site-wide 'right now' questions \u2014 what is being discussed, who is commenting, how fast posts arrive \u2014 which the ranked lists cannot answer because they hold only stories.",
+        "vgi.doc_md": "Walks backwards from the newest item id, one id at a time, and returns every item it finds.\n\n### Comments dominate\n\nIds are shared by every kind of item and most of what is posted is comments, so a window of recent ids is mostly comments with a few stories among them. Filter on `type`.\n\n### Sizing the window\n\nThe site takes in tens of thousands of items a day, so a few hundred ids reach back minutes, not hours. Every id is a request, fetched 32 at a time and emitted 100 per batch, newest first; a `LIMIT` stops the walk. The window is fixed when the call starts, so posts that arrive during a long walk are not included.",
+        "vgi.example_queries": "[{\"description\": \"What has been posted in the last few hundred items, by type\", \"sql\": \"SELECT type, count(*) AS items, min(created_at) AS since FROM hackernews.main.recent_items(500) GROUP BY type ORDER BY items DESC\"}, {\"description\": \"The newest stories submitted anywhere on the site\", \"sql\": \"SELECT id, title, author, created_at FROM hackernews.main.recent_items(1000) WHERE type = 'story' ORDER BY id DESC\"}]",
+        "vgi.result_columns_schema": "[{\"name\": \"id\", \"type\": \"BIGINT\", \"description\": \"Unique item id, assigned in increasing order across every kind of item; the key item() and comments() take, and the value kids, parent, poll and parts refer to.\"}, {\"name\": \"type\", \"type\": \"VARCHAR\", \"description\": \"What the item is: 'story', 'comment', 'job', 'poll' or 'pollopt' (one option of a poll). Ask HN and Show HN posts are stories.\"}, {\"name\": \"author\", \"type\": \"VARCHAR\", \"description\": \"Username of whoever posted it (the API's `by` field); the key user() takes. NULL on deleted items.\"}, {\"name\": \"created_at\", \"type\": \"TIMESTAMP WITH TIME ZONE\", \"description\": \"When the item was posted, as a UTC instant (the API's `time`, in Unix seconds).\"}, {\"name\": \"title\", \"type\": \"VARCHAR\", \"description\": \"Headline of a story, poll or job, as plain text. NULL for comments and poll options.\"}, {\"name\": \"url\", \"type\": \"VARCHAR\", \"description\": \"Address a link story points to. NULL for text posts such as Ask HN, and for comments.\"}, {\"name\": \"text\", \"type\": \"VARCHAR\", \"description\": \"Body of a comment, text post, job or poll option, as HTML: entity-escaped, with <p> paragraph breaks and <a> links. html_to_text() turns it into plain text. NULL when the item has no body.\"}, {\"name\": \"score\", \"type\": \"BIGINT\", \"description\": \"Points (net upvotes) on a story, poll or job, or the number of votes cast for a poll option. NULL for comments, whose scores Hacker News does not publish.\"}, {\"name\": \"descendants\", \"type\": \"BIGINT\", \"description\": \"Number of live comments in the whole thread under a story or poll, at every depth (deleted and dead comments are not counted). NULL for other item types.\"}, {\"name\": \"parent\", \"type\": \"BIGINT\", \"description\": \"Id of the item a comment replies to (another comment, or the story at the top of the thread). NULL for anything that is not a comment.\"}, {\"name\": \"poll\", \"type\": \"BIGINT\", \"description\": \"For a poll option, the item id of the poll (its parent). NULL otherwise.\"}, {\"name\": \"kids\", \"type\": \"BIGINT[]\", \"description\": \"Ids of the direct replies, in the ranked order Hacker News displays them. Empty when there are none.\"}, {\"name\": \"parts\", \"type\": \"BIGINT[]\", \"description\": \"For a poll, the ids of its options in display order. NULL for other item types.\"}, {\"name\": \"deleted\", \"type\": \"BOOLEAN\", \"description\": \"Whether the item was deleted. A deleted item keeps its id, type and place in its thread but loses its author and body. Never NULL.\"}, {\"name\": \"dead\", \"type\": \"BOOLEAN\", \"description\": \"Whether the item is dead: killed by moderators or flags, and hidden from readers who have not opted in to seeing it. Never NULL.\"}]"
+      },
+      null,
+      [
+        "count"
+      ],
+      [
+        "BIGINT"
+      ],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22603,
+      [
+        "SELECT type, count(*) AS items, min(created_at) AS since FROM hackernews.main.recent_items(500) GROUP BY type ORDER BY items DESC"
+      ],
+      null,
+      [
+        "items"
+      ]
+    ],
+    [
+      "hn",
+      "22595",
+      "main",
+      "stories",
+      null,
+      "table",
+      "The stories on one Hacker News list, chosen by name, in the order the site ranks them",
+      null,
+      {
+        "vgi.category": "rankings",
+        "vgi.doc_llm": "Hacker News' ranked story lists, hydrated into full rows with their position. Each list is also a table (`top_stories`, `new_stories`, ...) that reads as plain SQL; reach for this function when the list is chosen by a parameter or you want to compare lists in one query. `top` is the front page, `new` the latest submissions, `best` the highest-voted recent links, and `ask`, `show` and `job` the Ask HN, Show HN and jobs pages.",
+        "vgi.doc_md": "One row per story, in the order Hacker News ranks the list, with the whole item attached.\n\n### Rank is a snapshot\n\nThe list of ids is read once, when the scan starts, and frozen for the rest of it, so each `rank` appears exactly once. The stories themselves are fetched just after, so a `score` can be a few seconds newer than the ranking it sits in.\n\n### What each request costs\n\nThe API has no batch endpoint: reading the list is one request, and every row is one more. Rows are fetched 32 at a time and emitted 100 per batch, in rank order, so a query that stops early \u2014 a bare `LIMIT` \u2014 stops fetching too. An `ORDER BY` has to see every row first, so it reads the whole list.\n\n### Composing\n\nThis is a streaming scan, which means it cannot be the inner side of a correlated `LATERAL`. Drive joins from it: its `id` and `author` columns feed `comments()`, `item()` and `user()`.",
+        "vgi.example_queries": "[{\"description\": \"The first page of Hacker News as it stands right now\", \"sql\": \"SELECT rank, title, score, descendants AS comments FROM hackernews.main.stories('top') ORDER BY rank LIMIT 30\"}, {\"description\": \"Stories on both the front page and the best list\", \"sql\": \"SELECT t.rank AS top_rank, b.rank AS best_rank, t.title FROM hackernews.main.stories('top') t JOIN hackernews.main.stories('best') b USING (id) ORDER BY t.rank\"}]",
+        "vgi.result_columns_schema": "[{\"name\": \"rank\", \"type\": \"INTEGER\", \"description\": \"1-based position in the list when it was read; 1 is the top slot. Positions move from one read to the next, so the rank is a snapshot, not an identity.\"}, {\"name\": \"id\", \"type\": \"BIGINT\", \"description\": \"Unique item id, assigned in increasing order across every kind of item; the key item() and comments() take, and the value kids, parent, poll and parts refer to.\"}, {\"name\": \"type\", \"type\": \"VARCHAR\", \"description\": \"What the item is: 'story', 'comment', 'job', 'poll' or 'pollopt' (one option of a poll). Ask HN and Show HN posts are stories.\"}, {\"name\": \"author\", \"type\": \"VARCHAR\", \"description\": \"Username of whoever posted it (the API's `by` field); the key user() takes. NULL on deleted items.\"}, {\"name\": \"created_at\", \"type\": \"TIMESTAMP WITH TIME ZONE\", \"description\": \"When the item was posted, as a UTC instant (the API's `time`, in Unix seconds).\"}, {\"name\": \"title\", \"type\": \"VARCHAR\", \"description\": \"Headline of a story, poll or job, as plain text. NULL for comments and poll options.\"}, {\"name\": \"url\", \"type\": \"VARCHAR\", \"description\": \"Address a link story points to. NULL for text posts such as Ask HN, and for comments.\"}, {\"name\": \"text\", \"type\": \"VARCHAR\", \"description\": \"Body of a comment, text post, job or poll option, as HTML: entity-escaped, with <p> paragraph breaks and <a> links. html_to_text() turns it into plain text. NULL when the item has no body.\"}, {\"name\": \"score\", \"type\": \"BIGINT\", \"description\": \"Points (net upvotes) on a story, poll or job, or the number of votes cast for a poll option. NULL for comments, whose scores Hacker News does not publish.\"}, {\"name\": \"descendants\", \"type\": \"BIGINT\", \"description\": \"Number of live comments in the whole thread under a story or poll, at every depth (deleted and dead comments are not counted). NULL for other item types.\"}, {\"name\": \"parent\", \"type\": \"BIGINT\", \"description\": \"Id of the item a comment replies to (another comment, or the story at the top of the thread). NULL for anything that is not a comment.\"}, {\"name\": \"poll\", \"type\": \"BIGINT\", \"description\": \"For a poll option, the item id of the poll (its parent). NULL otherwise.\"}, {\"name\": \"kids\", \"type\": \"BIGINT[]\", \"description\": \"Ids of the direct replies, in the ranked order Hacker News displays them. Empty when there are none.\"}, {\"name\": \"parts\", \"type\": \"BIGINT[]\", \"description\": \"For a poll, the ids of its options in display order. NULL for other item types.\"}, {\"name\": \"deleted\", \"type\": \"BOOLEAN\", \"description\": \"Whether the item was deleted. A deleted item keeps its id, type and place in its thread but loses its author and body. Never NULL.\"}, {\"name\": \"dead\", \"type\": \"BOOLEAN\", \"description\": \"Whether the item is dead: killed by moderators or flags, and hidden from readers who have not opted in to seeing it. Never NULL.\"}]"
+      },
+      null,
+      [
+        "feed"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22604,
+      [
+        "SELECT rank, title, score, descendants AS comments FROM hackernews.main.stories('top') ORDER BY rank LIMIT 30"
+      ],
+      null,
+      [
+        "rankings"
+      ]
+    ],
+    [
+      "hn",
+      "22595",
+      "main",
+      "submissions",
+      null,
+      "table",
+      "Everything one Hacker News user has posted \u2014 stories, comments, polls \u2014 newest first",
+      null,
+      {
+        "vgi.category": "users",
+        "vgi.doc_llm": "A user's posting history, newest first: their stories, comments, polls and job ads as full item rows. Reach for this to see what someone writes about, how their stories scored, or when they are active. The username is case-sensitive. Long histories stream a page at a time, so add a `LIMIT` for the recent activity of a prolific account.",
+        "vgi.doc_md": "The items behind a user's `submitted` list, hydrated in the order the profile lists them, which is newest first.\n\n### Size\n\nAn active account has thousands of posts and an early one tens of thousands, every one a request. Rows arrive 100 per batch, so a `LIMIT` stops the walk: a user's last 50 comments cost about 50 requests whatever their history holds. Filter on `type` to separate stories from comments \u2014 the filter runs after the fetch, so it narrows the result, not the cost.\n\n### Unknown users\n\nAn unknown username, or one in the wrong case, returns no rows.",
+        "vgi.example_queries": "[{\"description\": \"Paul Graham's highest-scoring stories among his latest 200 posts\", \"sql\": \"SELECT title, score, created_at FROM (SELECT * FROM hackernews.main.submissions('pg') LIMIT 200) WHERE type = 'story' ORDER BY score DESC LIMIT 10\"}, {\"description\": \"What a user has been commenting on lately\", \"sql\": \"SELECT created_at, parent, hackernews.main.html_to_text(text) AS comment FROM (SELECT * FROM hackernews.main.submissions('dang') LIMIT 20) WHERE type = 'comment' ORDER BY created_at DESC\"}]",
+        "vgi.result_columns_schema": "[{\"name\": \"id\", \"type\": \"BIGINT\", \"description\": \"Unique item id, assigned in increasing order across every kind of item; the key item() and comments() take, and the value kids, parent, poll and parts refer to.\"}, {\"name\": \"type\", \"type\": \"VARCHAR\", \"description\": \"What the item is: 'story', 'comment', 'job', 'poll' or 'pollopt' (one option of a poll). Ask HN and Show HN posts are stories.\"}, {\"name\": \"author\", \"type\": \"VARCHAR\", \"description\": \"Username of whoever posted it (the API's `by` field); the key user() takes. NULL on deleted items.\"}, {\"name\": \"created_at\", \"type\": \"TIMESTAMP WITH TIME ZONE\", \"description\": \"When the item was posted, as a UTC instant (the API's `time`, in Unix seconds).\"}, {\"name\": \"title\", \"type\": \"VARCHAR\", \"description\": \"Headline of a story, poll or job, as plain text. NULL for comments and poll options.\"}, {\"name\": \"url\", \"type\": \"VARCHAR\", \"description\": \"Address a link story points to. NULL for text posts such as Ask HN, and for comments.\"}, {\"name\": \"text\", \"type\": \"VARCHAR\", \"description\": \"Body of a comment, text post, job or poll option, as HTML: entity-escaped, with <p> paragraph breaks and <a> links. html_to_text() turns it into plain text. NULL when the item has no body.\"}, {\"name\": \"score\", \"type\": \"BIGINT\", \"description\": \"Points (net upvotes) on a story, poll or job, or the number of votes cast for a poll option. NULL for comments, whose scores Hacker News does not publish.\"}, {\"name\": \"descendants\", \"type\": \"BIGINT\", \"description\": \"Number of live comments in the whole thread under a story or poll, at every depth (deleted and dead comments are not counted). NULL for other item types.\"}, {\"name\": \"parent\", \"type\": \"BIGINT\", \"description\": \"Id of the item a comment replies to (another comment, or the story at the top of the thread). NULL for anything that is not a comment.\"}, {\"name\": \"poll\", \"type\": \"BIGINT\", \"description\": \"For a poll option, the item id of the poll (its parent). NULL otherwise.\"}, {\"name\": \"kids\", \"type\": \"BIGINT[]\", \"description\": \"Ids of the direct replies, in the ranked order Hacker News displays them. Empty when there are none.\"}, {\"name\": \"parts\", \"type\": \"BIGINT[]\", \"description\": \"For a poll, the ids of its options in display order. NULL for other item types.\"}, {\"name\": \"deleted\", \"type\": \"BOOLEAN\", \"description\": \"Whether the item was deleted. A deleted item keeps its id, type and place in its thread but loses its author and body. Never NULL.\"}, {\"name\": \"dead\", \"type\": \"BOOLEAN\", \"description\": \"Whether the item is dead: killed by moderators or flags, and hidden from readers who have not opted in to seeing it. Never NULL.\"}]"
+      },
+      null,
+      [
+        "username"
+      ],
+      [
+        "VARCHAR"
+      ],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22605,
+      [
+        "SELECT title, score, created_at FROM (SELECT * FROM hackernews.main.submissions('pg') LIMIT 200) WHERE type = 'story' ORDER BY score DESC LIMIT 10"
+      ],
+      null,
+      [
+        "users"
+      ]
+    ],
+    [
+      "hn",
+      "22595",
+      "main",
+      "updated_items",
+      null,
+      "table",
+      "Scan function behind the updated_items table: recently changed items, hydrated",
+      null,
+      {
+        "vgi.category": "changes",
+        "vgi.doc_llm": "The items Hacker News' change feed lists right now, each fetched in its current state. Prefer the `updated_items` table, which scans this and reads as plain SQL; the function form exists so the scan itself can be called. Use it to see what is moving on the site this minute \u2014 threads gaining replies, stories gaining votes \u2014 rather than what is ranked.",
+        "vgi.doc_md": "The change feed's item half, hydrated.\n\n### Prefer the table\n\nThe `updated_items` table is backed by this function and returns exactly the same rows; it reads without parentheses.\n\n### What a change is\n\nThe feed does not say what changed, only that something did: a new reply adds to `kids`, a vote moves `score`, an edit rewrites `text`. It is a short rolling window, so two reads a minute apart share few rows.",
+        "vgi.example_queries": "[{\"description\": \"Recently changed items, grouped by kind\", \"sql\": \"SELECT type, count(*) AS changed FROM hackernews.main.updated_items() GROUP BY type ORDER BY changed DESC\"}]",
+        "vgi.result_columns_schema": "[{\"name\": \"rank\", \"type\": \"INTEGER\", \"description\": \"1-based position in the change feed as served; the feed is a rolling window of recent changes, not a ranking by importance.\"}, {\"name\": \"id\", \"type\": \"BIGINT\", \"description\": \"Unique item id, assigned in increasing order across every kind of item; the key item() and comments() take, and the value kids, parent, poll and parts refer to.\"}, {\"name\": \"type\", \"type\": \"VARCHAR\", \"description\": \"What the item is: 'story', 'comment', 'job', 'poll' or 'pollopt' (one option of a poll). Ask HN and Show HN posts are stories.\"}, {\"name\": \"author\", \"type\": \"VARCHAR\", \"description\": \"Username of whoever posted it (the API's `by` field); the key user() takes. NULL on deleted items.\"}, {\"name\": \"created_at\", \"type\": \"TIMESTAMP WITH TIME ZONE\", \"description\": \"When the item was posted, as a UTC instant (the API's `time`, in Unix seconds).\"}, {\"name\": \"title\", \"type\": \"VARCHAR\", \"description\": \"Headline of a story, poll or job, as plain text. NULL for comments and poll options.\"}, {\"name\": \"url\", \"type\": \"VARCHAR\", \"description\": \"Address a link story points to. NULL for text posts such as Ask HN, and for comments.\"}, {\"name\": \"text\", \"type\": \"VARCHAR\", \"description\": \"Body of a comment, text post, job or poll option, as HTML: entity-escaped, with <p> paragraph breaks and <a> links. html_to_text() turns it into plain text. NULL when the item has no body.\"}, {\"name\": \"score\", \"type\": \"BIGINT\", \"description\": \"Points (net upvotes) on a story, poll or job, or the number of votes cast for a poll option. NULL for comments, whose scores Hacker News does not publish.\"}, {\"name\": \"descendants\", \"type\": \"BIGINT\", \"description\": \"Number of live comments in the whole thread under a story or poll, at every depth (deleted and dead comments are not counted). NULL for other item types.\"}, {\"name\": \"parent\", \"type\": \"BIGINT\", \"description\": \"Id of the item a comment replies to (another comment, or the story at the top of the thread). NULL for anything that is not a comment.\"}, {\"name\": \"poll\", \"type\": \"BIGINT\", \"description\": \"For a poll option, the item id of the poll (its parent). NULL otherwise.\"}, {\"name\": \"kids\", \"type\": \"BIGINT[]\", \"description\": \"Ids of the direct replies, in the ranked order Hacker News displays them. Empty when there are none.\"}, {\"name\": \"parts\", \"type\": \"BIGINT[]\", \"description\": \"For a poll, the ids of its options in display order. NULL for other item types.\"}, {\"name\": \"deleted\", \"type\": \"BOOLEAN\", \"description\": \"Whether the item was deleted. A deleted item keeps its id, type and place in its thread but loses its author and body. Never NULL.\"}, {\"name\": \"dead\", \"type\": \"BOOLEAN\", \"description\": \"Whether the item is dead: killed by moderators or flags, and hidden from readers who have not opted in to seeing it. Never NULL.\"}]"
+      },
+      null,
+      [],
+      [],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22606,
+      [
+        "SELECT type, count(*) AS changed FROM hackernews.main.updated_items() GROUP BY type ORDER BY changed DESC"
+      ],
+      null,
+      [
+        "changes"
+      ]
+    ],
+    [
+      "hn",
+      "22595",
+      "main",
+      "updated_users",
+      null,
+      "table",
+      "Scan function behind the updated_users table: recently changed user profiles",
+      null,
+      {
+        "vgi.category": "changes",
+        "vgi.doc_llm": "The user profiles Hacker News' change feed lists right now, each fetched in its current state. Prefer the `updated_users` table, which scans this. A profile shows up here when anything about it moves \u2014 most often karma, as the user's posts are voted on \u2014 so it is a sample of who is active, not a directory.",
+        "vgi.doc_md": "The change feed's profile half, hydrated.\n\n### Prefer the table\n\nThe `updated_users` table is backed by this function and returns exactly the same rows.\n\n### Size\n\nThe feed lists a few dozen profiles, so this is one page, fetched concurrently. Each row carries the user's whole `submitted` list, which for a long-standing account runs to thousands of ids.",
+        "vgi.example_queries": "[{\"description\": \"Active users, by karma\", \"sql\": \"SELECT username, karma, len(submitted) AS posts FROM hackernews.main.updated_users() ORDER BY karma DESC\"}]",
+        "vgi.result_columns_schema": "[{\"name\": \"rank\", \"type\": \"INTEGER\", \"description\": \"1-based position in the change feed as served; the feed is a rolling window of recent profile changes, not a ranking.\"}, {\"name\": \"username\", \"type\": \"VARCHAR\", \"description\": \"Unique, case-sensitive username (the API's user `id`); what author holds on an item.\"}, {\"name\": \"created_at\", \"type\": \"TIMESTAMP WITH TIME ZONE\", \"description\": \"When the account was created, as a UTC instant.\"}, {\"name\": \"karma\", \"type\": \"BIGINT\", \"description\": \"Karma points (roughly the upvotes the user's stories and comments have received, less their downvotes).\"}, {\"name\": \"about\", \"type\": \"VARCHAR\", \"description\": \"Self-description from the profile, as HTML. NULL when blank.\"}, {\"name\": \"submitted\", \"type\": \"BIGINT[]\", \"description\": \"Ids of every story, comment, poll and job the user has posted, newest first. Can run to tens of thousands of ids; submissions() hydrates them a page at a time.\"}]"
+      },
+      null,
+      [],
+      [],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22607,
+      [
+        "SELECT username, karma, len(submitted) AS posts FROM hackernews.main.updated_users() ORDER BY karma DESC"
+      ],
+      null,
+      [
+        "changes"
+      ]
+    ],
+    [
+      "hn",
+      "22595",
+      "main",
+      "user",
+      null,
+      "table",
+      "Look up a Hacker News user's public profile and karma by username",
+      null,
+      {
+        "vgi.category": "users",
+        "vgi.doc_llm": "A Hacker News user's public profile \u2014 account age, karma, the about text and the ids of everything they have posted \u2014 by username. Usernames are case-sensitive. Feed it the `author` column of any item-returning object under a correlated LATERAL to put a profile beside each post. Only users with public activity exist in the API; an unknown name returns no row.",
+        "vgi.doc_md": "One row per username.\n\n### Case matters\n\n`pg` and `PG` are different names. Matching is exact, as the site does it, so a name in the wrong case finds nothing rather than the account you meant.\n\n### Posts\n\n`submitted` is every id the user has posted, newest first, and can hold tens of thousands of them. To read the posts themselves a page at a time, use `submissions()`.\n\n### Caching\n\nEvery call refetches unless `cache_ttl => N` is passed, which caches each profile for N seconds and memoizes repeated names within a `LATERAL`.",
+        "vgi.example_queries": "[{\"description\": \"Paul Graham's account\", \"sql\": \"SELECT username, created_at, karma, len(submitted) AS posts FROM hackernews.main.user('pg')\"}, {\"description\": \"Karma of the people who posted today's front page\", \"sql\": \"SELECT s.rank, s.author, u.karma, u.created_at AS joined FROM (SELECT rank, author FROM hackernews.main.top_stories WHERE rank <= 30) s, LATERAL hackernews.main.user(s.author, cache_ttl => 300) u ORDER BY s.rank\"}]",
+        "vgi.result_columns_schema": "[{\"name\": \"username\", \"type\": \"VARCHAR\", \"description\": \"Unique, case-sensitive username (the API's user `id`); what author holds on an item.\"}, {\"name\": \"created_at\", \"type\": \"TIMESTAMP WITH TIME ZONE\", \"description\": \"When the account was created, as a UTC instant.\"}, {\"name\": \"karma\", \"type\": \"BIGINT\", \"description\": \"Karma points (roughly the upvotes the user's stories and comments have received, less their downvotes).\"}, {\"name\": \"about\", \"type\": \"VARCHAR\", \"description\": \"Self-description from the profile, as HTML. NULL when blank.\"}, {\"name\": \"submitted\", \"type\": \"BIGINT[]\", \"description\": \"Ids of every story, comment, poll and job the user has posted, newest first. Can run to tens of thousands of ids; submissions() hydrates them a page at a time.\"}]"
+      },
+      null,
+      [
+        "username",
+        "cache_ttl"
+      ],
+      [
+        "VARCHAR",
+        "BIGINT"
+      ],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22608,
+      [
+        "SELECT username, created_at, karma, len(submitted) AS posts FROM hackernews.main.user('pg')"
+      ],
+      null,
+      [
+        "users"
+      ]
+    ]
+  ]
+}

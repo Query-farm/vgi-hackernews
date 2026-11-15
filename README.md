@@ -351,6 +351,6 @@ MIT — see [LICENSE](LICENSE). The worker is Query Farm's; the stories,
 comments and profiles it returns belong to their authors and are published by
 Y Combinator's Hacker News. See [NOTICE](NOTICE).
 
-## Executed notebook
+## Executed notebooks
 
-[Compare front-page rank with score in a recorded public snapshot](notebooks/README.md).
+[Explore ranking order, bounded comment threads and recent-item windows with SQL and SVG charts](notebooks/README.md). Each notebook includes an Open in Colab link and a visible public-release connection.

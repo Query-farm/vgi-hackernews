@@ -1,0 +1,49 @@
+{
+  "query": "SELECT * FROM duckdb_databases() WHERE database_name='hn'",
+  "columns": [
+    "database_name",
+    "database_oid",
+    "path",
+    "comment",
+    "tags",
+    "internal",
+    "type",
+    "readonly",
+    "encrypted",
+    "cipher",
+    "options"
+  ],
+  "rows": [
+    [
+      "hn",
+      22595,
+      null,
+      "Hacker News front page, stories, comment threads and user profiles, read live from the official API",
+      {
+        "domain": "tech-news",
+        "provider": "hacker-news",
+        "vgi.agent_test_tasks": "[{\"name\": \"front_page\", \"prompt\": \"What are the titles of the five stories at the top of the Hacker News front page right now, in order?\"}, {\"name\": \"newest_submissions\", \"prompt\": \"Which three stories were submitted to Hacker News most recently? Give their titles and authors.\"}, {\"name\": \"on_both_lists\", \"prompt\": \"How many stories are on the Hacker News front page and on its 'best' list at the same time?\"}, {\"name\": \"best_right_now\", \"prompt\": \"Which story on Hacker News' 'best' list has the highest score at the moment?\"}, {\"name\": \"busiest_ask_hn\", \"prompt\": \"Of the Ask HN questions currently listed, which one has drawn the most comments?\"}, {\"name\": \"top_show_hn\", \"prompt\": \"What is the highest-scoring Show HN post currently listed on Hacker News?\"}, {\"name\": \"who_is_hiring\", \"prompt\": \"Which job ads are listed on Hacker News right now? Give their titles.\"}, {\"name\": \"dropbox_launch\", \"prompt\": \"Hacker News item 8863 is Dropbox's launch post. What was its title, and who posted it?\"}, {\"name\": \"poll_results\", \"prompt\": \"Hacker News item 126809 is a poll. How many votes did each of its options get, most first?\"}, {\"name\": \"thread_regular\", \"prompt\": \"Who wrote the most comments in the discussion under Hacker News item 8863?\"}, {\"name\": \"comment_search\", \"prompt\": \"In the discussion under Hacker News item 8863, how many comments contain the word \\\"don't\\\"?\"}, {\"name\": \"account_age\", \"prompt\": \"In what year did the Hacker News user pg create their account?\"}, {\"name\": \"recent_posting_mix\", \"prompt\": \"Of the 100 most recent posts by the Hacker News user pg, how many are stories rather than comments?\"}, {\"name\": \"site_activity\", \"prompt\": \"Among the last 300 items posted anywhere on Hacker News, are there more comments than stories?\"}, {\"name\": \"what_is_changing\", \"prompt\": \"Which kinds of item (story, comment, and so on) appear in Hacker News' feed of recently changed items right now?\"}, {\"name\": \"active_accounts\", \"prompt\": \"Among the Hacker News user profiles that changed most recently, does anyone have more than 1,000 karma?\"}, {\"name\": \"site_size\", \"prompt\": \"Roughly how many items have ever been posted to Hacker News, in whole millions rounded down?\"}]",
+        "vgi.author": "Query Farm LLC <hello@query.farm>",
+        "vgi.copyright": "Worker (c) 2026 Query Farm LLC - https://query.farm. Stories, comments and profiles (c) their authors, published by Y Combinator's Hacker News.",
+        "vgi.doc_llm": "Live data from Hacker News, Y Combinator's technology news site: what is on the front page and the other ranked lists right now, every story and comment by id, whole discussion threads, and public user profiles with karma. Reach for it to answer what the tech community is reading and saying, how a story was received, or what a person has posted. Start from a ranking table such as `top_stories` to find a story, then follow its id into the thread. Read-only and public: no credentials, no posting.",
+        "vgi.doc_md": "[Hacker News](https://news.ycombinator.com) is a link-sharing and discussion site run by Y Combinator. Members submit stories \u2014 links, Ask HN questions, Show HN launches, job ads \u2014 and discuss them in threaded comments; votes decide what reaches the front page.\n\n### How the data is shaped\n\nEverything posted is an *item* with a numeric id: stories, comments, polls, poll options and jobs share one id sequence and one set of columns. Items point at each other by id \u2014 a comment names its `parent`, a story lists its replies in `kids` \u2014 so reading a discussion means following ids, which the thread function does for you.\n\n### Freshness and cost\n\nThis is the live site through its official API, not an archive: every query reads the current state, and nothing is cached unless you ask. The API has no search and no batch endpoint, so each item costs one request; requests run 32 at a time and rows stream in pages, so a `LIMIT` stops early. A whole ranking reads in a second or two, a large thread in a few seconds.\n\n### Access\n\nThe API is public and unauthenticated, and this worker only reads. Content belongs to its authors.",
+        "vgi.executable_examples": "[{\"name\": \"an_old_item_is_stable\", \"description\": \"Item 8863 is Dropbox's 2007 launch post; its title and author never change.\", \"sql\": \"SELECT title, author, type FROM hackernews.main.item(8863)\", \"expected_result\": [[\"My YC app: Dropbox - Throw away your USB drive\", \"dhouston\", \"story\"]]}, {\"name\": \"an_unassigned_id_is_no_row\", \"description\": \"An id with no item behind it returns nothing rather than an error.\", \"sql\": \"SELECT count(*) FROM hackernews.main.item(999999999999)\", \"expected_result\": [[0]]}, {\"name\": \"unix_time_becomes_a_timestamp\", \"description\": \"created_at is a real instant: pg's account dates from 1160418092 in Unix time.\", \"sql\": \"SELECT username, CAST(epoch(created_at) AS BIGINT) FROM hackernews.main.user('pg')\", \"expected_result\": [[\"pg\", 1160418092]]}, {\"name\": \"a_poll_lists_its_options\", \"description\": \"A poll carries the ids of its options in parts.\", \"sql\": \"SELECT type, len(parts) FROM hackernews.main.item(126809)\", \"expected_result\": [[\"poll\", 3]]}, {\"name\": \"a_thread_is_rooted_and_nested\", \"description\": \"Every comment in a thread names its root, and the walk starts at depth 1.\", \"sql\": \"SELECT bool_and(root_id = 8863), min(depth), bool_and(len(path) = depth) FROM hackernews.main.comments(8863)\", \"expected_result\": [[true, 1, true]]}, {\"name\": \"a_depth_cap_stops_the_walk\", \"description\": \"max_depth => 1 returns exactly the story's direct replies.\", \"sql\": \"SELECT (SELECT count(*) FROM hackernews.main.comments(8863, max_depth => 1)) = (SELECT len(kids) FROM hackernews.main.item(8863))\", \"expected_result\": [[true]]}, {\"name\": \"a_limit_stops_a_ranking_early\", \"description\": \"A ranking streams in pages, so a LIMIT yields its rows without reading the rest.\", \"sql\": \"SELECT count(*) FROM (SELECT id FROM hackernews.main.top_stories LIMIT 30)\", \"expected_result\": [[30]]}, {\"name\": \"ranks_are_dense_from_one\", \"description\": \"A list's ranks run 1..n with no gaps or repeats.\", \"sql\": \"SELECT min(rank) = 1 AND max(rank) = count(*) AND count(DISTINCT rank) = count(*) FROM hackernews.main.job_stories\", \"expected_result\": [[true]]}, {\"name\": \"html_is_decoded\", \"description\": \"html_to_text decodes entities and drops markup.\", \"sql\": \"SELECT hackernews.main.html_to_text('Don&#x27;t <i>panic</i> &amp; carry on')\", \"expected_result\": [[\"Don't panic & carry on\"]]}, {\"name\": \"the_site_has_tens_of_millions_of_items\", \"description\": \"max_item is the newest id, and ids are assigned in sequence.\", \"sql\": \"SELECT id > 40000000 FROM hackernews.main.max_item\", \"expected_result\": [[true]]}]",
+        "vgi.keywords": "[\"hacker news\", \"hn\", \"ycombinator\", \"tech news\", \"front page\", \"comments\", \"discussion\", \"karma\"]",
+        "vgi.license": "MIT",
+        "vgi.source_url": "https://github.com/Query-farm/vgi-hackernews",
+        "vgi.subtitle": "Front-page rankings, stories, comment threads and user profiles from the public Hacker News API.",
+        "vgi.support_contact": "https://github.com/Query-farm/vgi-hackernews/issues",
+        "vgi.support_policy_url": "https://github.com/Query-farm/vgi-hackernews/blob/main/README.md",
+        "vgi.title": "Hacker News API"
+      },
+      false,
+      "vgi",
+      false,
+      false,
+      null,
+      {
+        "location": "uvx --python 3.13 --from git+https://github.com/Query-farm/vgi-hackernews@v0.3.0 vgi-hackernews"
+      }
+    ]
+  ]
+}
