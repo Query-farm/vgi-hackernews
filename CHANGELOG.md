@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1 (2026-11-16)
+
+- Bump vgi-python to 0.52.2.
+
 ## 0.3.0
 
 - Speaks VGI protocol 3.3: requires vgi-python 0.51.0. The published `vgi`
