@@ -7,7 +7,7 @@
 # image carries no credentials and needs none; it only needs outbound HTTPS to
 # hacker-news.firebaseio.com.
 # syntax=docker/dockerfile:1
-FROM python:3.13-slim
+FROM python:3.14-slim
 
 ARG VERSION=0.0.0
 ARG GIT_COMMIT=unknown

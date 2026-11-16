@@ -12,12 +12,12 @@ classifiers = [
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Database",
     "Topic :: Internet :: WWW/HTTP",
     "Typing :: Typed",
 ]
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 dependencies = [
     "vgi-python[http]>=0.52.2,<0.53",
     # vgi-python already depends on httpx2 (pydantic's maintained httpx fork);
@@ -66,7 +66,7 @@ path = "vgi_hackernews/__init__.py"
 
 [tool.ruff]
 line-length = 110
-target-version = "py313"
+target-version = "py314"
 
 # Selected explicitly rather than left to the default set, which changes between
 # ruff releases, so CI and a developer's shell reach the same conclusion.

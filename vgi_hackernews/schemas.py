@@ -272,7 +272,7 @@ def to_timestamp(value: Any) -> datetime | None:
         return None
     try:
         parsed = datetime.fromtimestamp(float(value), tz=UTC)
-    except (ValueError, OverflowError, OSError):
+    except ValueError, OverflowError, OSError:
         return None
     return parsed if _NS_FLOOR <= parsed <= _NS_CEILING else None
 
@@ -283,7 +283,7 @@ def to_integer(value: Any, kind: pa.DataType) -> int | None:
         return None
     try:
         number = int(value)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return None
     bits = kind.bit_width - 1
     return number if -(2**bits) <= number < 2**bits else None
