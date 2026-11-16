@@ -1,0 +1,82 @@
+# name: test/sql/lookups.test
+# description: Point lookups (item, user), html_to_text, LATERAL composition
+# group: [hackernews]
+#
+# Runs offline against test/mock_api/server.py, which replays the recorded
+# Hacker News responses in notebooks/fixtures/*.json.gz (top stories captured
+# 2026-11-14; item 8863's thread through depth 2 and user dhouston; the 100
+# newest ids below maxitem 50502385). ci/run-integration.sh starts it.
+
+require vgi
+
+require-env VGI_HACKERNEWS_WORKER
+
+require-env HN_BASE_URL
+
+statement ok
+ATTACH 'hackernews' (TYPE vgi, LOCATION '{VGI_HACKERNEWS_WORKER}');
+
+query ITTIIIT
+SELECT id, author, title, score, descendants, len(kids), created_at::TIMESTAMP FROM hackernews.main.item(8863);
+----
+8863	dhouston	My YC app: Dropbox - Throw away your USB drive	104	71	33	2007-04-04 19:16:40
+
+# Timestamps are UTC instants.
+query I
+SELECT epoch(created_at) FROM hackernews.main.item(8863);
+----
+1175714200.0
+
+# A missing item (the API answers null) is no row, not an error.
+query I
+SELECT count(*) FROM hackernews.main.item(999999999999);
+----
+0
+
+# A subquery key reaches the blended function.
+query T
+SELECT title FROM hackernews.main.item((SELECT 8863));
+----
+My YC app: Dropbox - Throw away your USB drive
+
+# Following kids: every reply's parent is the story.
+query II
+SELECT count(*) FILTER (WHERE c.parent <> 8863), count(*) FROM (SELECT unnest(kids) AS kid FROM hackernews.main.item(8863)) k, LATERAL hackernews.main.item(k.kid) c;
+----
+0	33
+
+statement error
+SELECT * FROM hackernews.main.item(8863, cache_ttl => -1);
+----
+<REGEX>:.*cache_ttl.*too small.*
+
+query TITIT
+SELECT username, karma, about, len(submitted), created_at::TIMESTAMP FROM hackernews.main.user('dhouston');
+----
+dhouston	3803	Founder&#x2F;CEO of Dropbox (http:&#x2F;&#x2F;www.dropbox.com ; yc summer &#x27;07)	262	2007-03-29 17:31:02
+
+# Usernames are case-sensitive path segments; unknown or traversing names are no row.
+query I
+SELECT count(*) FROM hackernews.main.user('nobody-here');
+----
+0
+
+query I
+SELECT count(*) FROM hackernews.main.user('pg/../x');
+----
+0
+
+query T
+SELECT hackernews.main.html_to_text(about) FROM hackernews.main.user('dhouston');
+----
+Founder/CEO of Dropbox (http://www.dropbox.com ; yc summer '07)
+
+query T
+SELECT hackernews.main.html_to_text('<p>a &amp; b</p><p>c &#x27;d&#x27;') = E'a & b\n\nc ''d''';
+----
+true
+
+query T
+SELECT hackernews.main.html_to_text(NULL);
+----
+NULL

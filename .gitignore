@@ -17,3 +17,4 @@ venv/
 # vgi-lint baselines are per-machine unless deliberately committed
 .vgi-lint-baseline*.json
 duckdb_unittest_tempdir/
+.tools/

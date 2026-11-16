@@ -1,0 +1,90 @@
+# name: test/sql/walks.test
+# description: Walks: comments (thread), submissions (a user's posts), recent_items (id window)
+# group: [hackernews]
+#
+# Runs offline against test/mock_api/server.py, which replays the recorded
+# Hacker News responses in notebooks/fixtures/*.json.gz (top stories captured
+# 2026-11-14; item 8863's thread through depth 2 and user dhouston; the 100
+# newest ids below maxitem 50502385). ci/run-integration.sh starts it.
+
+require vgi
+
+require-env VGI_HACKERNEWS_WORKER
+
+require-env HN_BASE_URL
+
+statement ok
+ATTACH 'hackernews' (TYPE vgi, LOCATION '{VGI_HACKERNEWS_WORKER}');
+
+query II
+SELECT depth, count(*) FROM hackernews.main.comments(8863, max_depth => 2) GROUP BY ALL ORDER BY ALL;
+----
+1	33
+2	18
+
+query I
+SELECT count(*) FROM hackernews.main.comments(8863, max_depth => 1);
+----
+33
+
+# Path order is the kids order, depth-first.
+query ITT
+SELECT id, path, author FROM hackernews.main.comments(8863, max_depth => 2) ORDER BY path LIMIT 3;
+----
+9224	[1]	BrandonM
+9272	[1, 1]	dhouston
+8917	[2]	brett
+
+query III
+SELECT count(*) FILTER (WHERE root_id <> 8863), count(*) FILTER (WHERE deleted), count(*) FILTER (WHERE dead) FROM hackernews.main.comments(8863, max_depth => 2);
+----
+0	0	1
+
+# Under LATERAL, each driving row's replies are stamped with its own root.
+query II
+SELECT s.id, count(*) FROM (VALUES (8863)) s(id), LATERAL hackernews.main.comments(s.id, max_depth => 1) c WHERE c.root_id = s.id GROUP BY s.id;
+----
+8863	33
+
+statement error
+SELECT * FROM hackernews.main.comments(8863, max_depth => -1);
+----
+<REGEX>:.*max_depth.*too small.*
+
+# Only 8 of dhouston's 262 submissions were recorded; the rest answer null and are skipped.
+query IT
+SELECT id, type FROM hackernews.main.submissions('dhouston') ORDER BY id;
+----
+8863	story
+8865	comment
+8874	comment
+8875	comment
+8889	comment
+8892	comment
+9247	comment
+9272	comment
+
+query I
+SELECT count(*) FROM hackernews.main.submissions('nobody-here');
+----
+0
+
+query IIII
+SELECT count(*), min(id), max(id), count(*) FILTER (WHERE type = 'comment') FROM hackernews.main.recent_items(100);
+----
+100	50502286	50502385	92
+
+query I
+SELECT count(*) FROM (SELECT id FROM hackernews.main.recent_items(100) LIMIT 5);
+----
+5
+
+statement error
+SELECT * FROM hackernews.main.recent_items(0);
+----
+<REGEX>:.*too small.*
+
+statement error
+SELECT * FROM hackernews.main.recent_items(50001);
+----
+<REGEX>:.*too large.*

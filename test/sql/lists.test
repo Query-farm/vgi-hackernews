@@ -1,0 +1,124 @@
+# name: test/sql/lists.test
+# description: Ranked lists: the six feeds, stories(), updates and max_item
+# group: [hackernews]
+#
+# Runs offline against test/mock_api/server.py, which replays the recorded
+# Hacker News responses in notebooks/fixtures/*.json.gz (top stories captured
+# 2026-11-14; item 8863's thread through depth 2 and user dhouston; the 100
+# newest ids below maxitem 50502385). ci/run-integration.sh starts it.
+
+require vgi
+
+require-env VGI_HACKERNEWS_WORKER
+
+require-env HN_BASE_URL
+
+statement ok
+ATTACH 'hackernews' (TYPE vgi, LOCATION '{VGI_HACKERNEWS_WORKER}');
+
+# (Rank 3's title carries a non-ASCII dash, so it is checked by id and score below.)
+query ITTTIIT
+SELECT rank, id, author, title, score, descendants, created_at::TIMESTAMP FROM hackernews.main.top_stories ORDER BY rank LIMIT 2;
+----
+1	50493062	cobychapple	Ggml v1.0.0	174	29	2026-11-14 02:28:29
+2	50493251	speckx	Nvidia Allegedly Engineered Scarcity by Funding AI Startups to Buy Its GPUs	369	192	2026-11-14 02:52:59
+
+query III
+SELECT id, score, descendants FROM hackernews.main.top_stories WHERE rank = 3;
+----
+50489641	1489	1143
+
+# The whole front-page list, every item hydrated.
+query III
+SELECT count(*), max(rank), sum(score) FROM hackernews.main.top_stories;
+----
+500	500	91379
+
+query TI
+SELECT type, count(*) FROM hackernews.main.top_stories GROUP BY ALL ORDER BY ALL;
+----
+job	1
+story	499
+
+query I
+SELECT count(*) FROM (SELECT id FROM hackernews.main.top_stories LIMIT 10);
+----
+10
+
+query IIT
+SELECT rank, id, title FROM hackernews.main.ask_stories ORDER BY rank;
+----
+1	50488230	Ask HN: What is the state of self-hosting email in 2026?
+2	50417407	Ask HN: What are you working on? (November 2026)
+3	50481227	Ask HN: Do you see a human written book more valuable than an AI written one?
+
+query III
+SELECT count(*), min(rank), max(rank) FROM hackernews.main.show_stories;
+----
+46	1	46
+
+query I
+SELECT count(*) FROM hackernews.main.show_stories WHERE NOT starts_with(title, 'Show HN:');
+----
+0
+
+query IITT
+SELECT rank, id, type, title FROM hackernews.main.job_stories;
+----
+1	50489589	job	Autonomous (YC F25) is hiring MTS to build AI agents that manage your wealth
+
+query III
+SELECT rank, id, score FROM hackernews.main.best_stories ORDER BY rank LIMIT 3;
+----
+1	50467087	4021
+2	50489641	1489
+3	50450488	1428
+
+query II
+SELECT rank, id FROM hackernews.main.new_stories ORDER BY rank LIMIT 3;
+----
+1	50494668
+2	50494529
+3	50494232
+
+# stories(feed) reads any of the six lists.
+query IIT
+SELECT rank, id, title FROM hackernews.main.stories('ask') ORDER BY rank;
+----
+1	50488230	Ask HN: What is the state of self-hosting email in 2026?
+2	50417407	Ask HN: What are you working on? (November 2026)
+3	50481227	Ask HN: Do you see a human written book more valuable than an AI written one?
+
+query I
+SELECT (SELECT list(id ORDER BY rank) FROM hackernews.main.stories('top')) = (SELECT list(id ORDER BY rank) FROM hackernews.main.top_stories);
+----
+true
+
+statement error
+SELECT * FROM hackernews.main.stories('nope');
+----
+<REGEX>:.*must be one of the allowed choices.*
+
+query III
+SELECT rank, id, score FROM hackernews.main.updated_items ORDER BY rank;
+----
+1	50493062	174
+2	50493251	369
+3	50489641	1489
+4	50491423	193
+5	50491980	97
+
+query ITIT
+SELECT rank, username, karma, created_at::TIMESTAMP FROM hackernews.main.updated_users;
+----
+1	dhouston	3803	2007-03-29 17:31:02
+
+query I
+SELECT id FROM hackernews.main.max_item;
+----
+50502385
+
+query I
+SELECT id FROM hackernews.main.max_item();
+----
+50502385

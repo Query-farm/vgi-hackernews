@@ -1,0 +1,64 @@
+# name: test/sql/catalog.test
+# description: The catalog's tables and functions are advertised
+# group: [hackernews]
+#
+# Runs offline against test/mock_api/server.py, which replays the recorded
+# Hacker News responses in notebooks/fixtures/*.json.gz (top stories captured
+# 2026-11-14; item 8863's thread through depth 2 and user dhouston; the 100
+# newest ids below maxitem 50502385). ci/run-integration.sh starts it.
+
+require vgi
+
+require-env VGI_HACKERNEWS_WORKER
+
+require-env HN_BASE_URL
+
+statement ok
+ATTACH 'hackernews' (TYPE vgi, LOCATION '{VGI_HACKERNEWS_WORKER}');
+
+query T
+SELECT table_name FROM duckdb_tables() WHERE database_name = 'hackernews' ORDER BY table_name;
+----
+ask_stories
+best_stories
+job_stories
+max_item
+new_stories
+show_stories
+top_stories
+updated_items
+updated_users
+
+query TT
+SELECT DISTINCT function_name, function_type FROM duckdb_functions() WHERE database_name = 'hackernews' ORDER BY function_name;
+----
+comments	table
+html_to_text	scalar
+item	table
+max_item	table
+recent_items	table
+stories	table
+submissions	table
+updated_items	table
+updated_users	table
+user	table
+
+query TT
+SELECT column_name, data_type FROM duckdb_columns() WHERE database_name = 'hackernews' AND table_name = 'top_stories' ORDER BY column_index;
+----
+rank	INTEGER
+id	BIGINT
+type	VARCHAR
+author	VARCHAR
+created_at	TIMESTAMP WITH TIME ZONE
+title	VARCHAR
+url	VARCHAR
+text	VARCHAR
+score	BIGINT
+descendants	BIGINT
+parent	BIGINT
+poll	BIGINT
+kids	BIGINT[]
+parts	BIGINT[]
+deleted	BOOLEAN
+dead	BOOLEAN
