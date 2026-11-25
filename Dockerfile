@@ -53,6 +53,6 @@ USER vgi
 
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=8s \
-    CMD curl -fsS "http://localhost:${PORT}/health" || exit 1
+    CMD curl -fsSI "http://localhost:${PORT}/health" || exit 1
 
 ENTRYPOINT ["docker-entrypoint.sh"]

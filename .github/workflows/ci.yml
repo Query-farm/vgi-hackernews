@@ -14,7 +14,7 @@ concurrency:
 
 env:
   # The SQL test runner; must speak the same VGI protocol as the SDK.
-  HAYBARN_VERSION: "2.0.0rc11"
+  HAYBARN_VERSION: "2.0.1rc3"
 
 jobs:
   check:
