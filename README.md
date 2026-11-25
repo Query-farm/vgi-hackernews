@@ -70,9 +70,11 @@ An unpinned `LOCATION` tracks `main`: each launch asks GitHub for the current
 commit and rebuilds only when it has moved. Pin a release tag for a
 deployment, so the worker cannot change under you:
 
+vgi-hackernews 0.4.0 speaks VGI protocol 3.4, so it needs Haybarn 2.0.1 or newer (Haybarn 2.0.0 loads a 3.3 `vgi` extension that cannot attach it).
+
 ```sql
 ATTACH 'hackernews' (TYPE vgi,
-  LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-hackernews@v0.3.2 vgi-hackernews');
+  LOCATION 'uvx --from git+https://github.com/Query-farm/vgi-hackernews@v0.4.0 vgi-hackernews');
 ```
 
 ### As an HTTP server
